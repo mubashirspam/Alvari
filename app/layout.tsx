@@ -18,7 +18,7 @@ const dmSerif = DM_Serif_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Kaasth — Direct-from-Factory Furniture, Wayanad",
+  title: "Alvari — Direct-from-Factory Furniture, Wayanad",
   description:
     "Almirahs, beds, sofas and complete room sets handcrafted in our Wayanad factory. Factory prices, no middlemen. Delivered across Kerala.",
   metadataBase: new URL(

@@ -1,0 +1,173 @@
+# Kaasth — Windsurf Rules
+
+You are assisting on a production Next.js app for Kaasth, a Wayanad-based
+furniture workshop selling direct to customers across Kerala. Read these rules
+before writing any code in this repo.
+
+## Stack (exact versions matter — don't assume)
+
+- **Next.js 16.2.4** (App Router) — this is NOT the Next.js in your training data.
+  APIs, conventions, and file structure may differ. When touching framework
+  surface area (route handlers, `params`, `headers()`, `cookies()`, metadata,
+  caching directives, `fetch` semantics), read the relevant guide in
+  `node_modules/next/dist/docs/` first. Respect deprecation notices.
+- **React 19.2** — Server Components by default. Only add `"use client"` when
+  the file needs browser-only APIs, state, or event handlers.
+- **TypeScript 5** strict mode, `moduleResolution: "bundler"`, path alias `@/*`.
+- **Tailwind CSS v4** — tokens live in `app/globals.css` (`@theme`, CSS vars).
+  No `tailwind.config.js`. Don't create one.
+- **shadcn-style primitives** in `components/ui/` (Button, Input, Textarea,
+  Select, Label). Compose these; don't pull in a UI kit.
+- **Drizzle ORM 0.45** over **Neon Postgres** via `@neondatabase/serverless`
+  (HTTP driver — serverless-safe, no persistent connections).
+- **Upstash Redis** (REST) for product query caching. Must degrade gracefully
+  when env vars are absent.
+- **ImageKit** for image delivery via `buildImageKitUrl()` in `lib/imagekit.ts`.
+- **Zod 4** for validation at boundaries (API routes, forms).
+- **Vercel** deploy target.
+
+## Project structure
+
+```
+app/                       # routes only — thin, delegate to services
+  api/{products,enquiries} # route handlers, call services
+  products/{,[slug]}/      # listing + detail, ISR
+components/ui/             # shadcn primitives
+components/layout/         # nav, footer, marquee, WA float, ScrollReveal
+features/<domain>/
+  components/              # UI for that domain
+  repositories/            # DB queries ONLY (Drizzle)
+  services/                # business logic + caching, calls repos
+  schema.ts / types.ts     # zod + row mappers
+lib/
+  db/{index,schema}.ts     # Drizzle client + tables
+  cache/{redis,keys}.ts    # cached() wrapper + key registry
+  imagekit.ts env.ts utils.ts
+scripts/seed.ts            # tsx scripts/seed.ts
+drizzle.config.ts
+```
+
+## Layering rule (hard boundary — do not cross)
+
+```
+route handler / page  →  service  →  repository  →  db
+                          ↑ owns cache + zod parsing
+```
+
+- **Components** are UI-only. No direct DB, no `fetch` to our own API.
+  Server Components call services directly.
+- **Services** (`features/*/services/*.ts`) own business logic, Zod parsing,
+  and Redis caching via `cached()`. They call repositories — never `db` directly.
+- **Repositories** (`features/*/repositories/*.ts`) own Drizzle queries. No
+  caching, no validation, no business logic. Return typed rows or mapped types.
+- **API routes** (`app/api/**/route.ts`) parse request, call a service, return
+  JSON. Keep thin.
+
+Violating this layering is the single most common bad change. Reject the
+temptation to import `db` or `cached` from a component or route handler.
+
+## Data & schema
+
+- Schema lives in `lib/db/schema.ts`. All tables, enums, and row types are
+  exported from here. Use `$inferSelect` / `$inferInsert` — don't hand-roll row
+  types.
+- Money is stored as integer **paise** (`priceNowInPaise`). Convert at the edge
+  with `formatINR(paise / 100)` from `lib/utils.ts`. Never store floats.
+- IDs are `uuid defaultRandom()`. Slugs are the human-facing identifier for
+  products.
+- To change the schema: edit `lib/db/schema.ts` → `npm run db:generate` to
+  produce a migration in `drizzle/` → `npm run db:push` (prototyping) or
+  commit the SQL for prod. Never edit generated migrations by hand.
+- Add an index for any column you filter or order on.
+
+## Caching
+
+- Pages use ISR: `export const revalidate = 60;` on the route file.
+- Query caching is at the service layer via `cached(key, ttlSeconds, loader)`
+  from `lib/cache/redis.ts`. Keys must be declared in `lib/cache/keys.ts` — do
+  not inline string keys at call sites. TTLs are in `cacheTtl`.
+- Bump the `:v1` suffix in a cache key when the shape of the cached value
+  changes; old entries will age out.
+- On writes that invalidate cached reads, call `invalidate(...keys)` from the
+  service. Writes (enquiries) are never cached.
+- `cached()` must continue to work when Upstash env vars are unset — it falls
+  through to the loader. Don't add code paths that assume Redis is present.
+
+## Environment
+
+- All env access goes through `lib/env.ts` (Zod-parsed). Never read
+  `process.env.X` directly in feature code.
+- Server-only secrets: `DATABASE_URL`, `UPSTASH_REDIS_REST_*`,
+  `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_PUBLIC_KEY`.
+- Public (`NEXT_PUBLIC_*`): `IMAGEKIT_URL_ENDPOINT`, `SITE_URL`,
+  `WHATSAPP_NUMBER`. These are bundled to the client — never put a secret here.
+- `.env.local` is gitignored. Update `.env.example` when you add a new var.
+
+## Images
+
+- Use `next/image` with `buildImageKitUrl(path, { width, format: "auto" })` to
+  build `src`. Remote patterns are configured for the ImageKit endpoint in
+  `next.config.ts`.
+- For local fallback, a path like `/hero.jpeg` works (served from `public/`).
+- Always set `alt`. Set `sizes` for responsive images.
+
+## UI conventions
+
+- Class merging: `cn(...)` from `lib/utils.ts`. Don't import `clsx` or
+  `tailwind-merge` directly in components.
+- Currency: `formatINR(rupees)` — pass rupees (not paise), integer only.
+- Colors, spacing, radii, fonts come from CSS vars in `app/globals.css`.
+  Extend there rather than hard-coding hex values in components.
+- Fonts are `DM_Sans` (body) and `DM_Serif_Display` (display), wired in
+  `app/layout.tsx`. Use the CSS vars `--font-dm-sans` / `--font-dm-serif`.
+- `"use client"` goes at the top of files that actually need it (forms,
+  interactive layout bits). Prefer server components.
+- WhatsApp is the primary CTA. Link format:
+  `https://wa.me/<NEXT_PUBLIC_WHATSAPP_NUMBER>?text=...`.
+
+## Forms & validation
+
+- Client forms POST to `app/api/<resource>/route.ts`.
+- Route handler parses JSON, calls `service.createX(raw)`, returns
+  `{ ok: true }` or `{ ok: false, error }` with the right status.
+- Validation happens in the **service** via Zod (`features/*/schema.ts`).
+  Do not validate in the route handler and again in the service — one source
+  of truth.
+- Trim strings, clamp lengths. Use `.optional().nullable()` for nullable DB
+  columns so the Zod output matches the insert shape.
+
+## Conventions
+
+- File names: `kebab-case.ts` / `kebab-case.tsx`. Component exports:
+  `PascalCase`. Functions: `camelCase`.
+- Imports use the `@/` alias — no deep relative paths (`../../../`).
+- Don't add comments that restate the code. Comment only non-obvious *why*.
+- Don't invent helper abstractions for a single caller.
+- Don't add backwards-compatibility shims — this is a new codebase.
+- Don't create `README.md` or docs files unless asked.
+
+## Commands
+
+```
+npm run dev          # Next dev server
+npm run build        # production build
+npm run typecheck    # tsc --noEmit  (run before claiming a task is done)
+npm run lint         # eslint
+npm run db:generate  # new Drizzle migration from schema.ts
+npm run db:push      # push schema to Neon (prototyping only)
+npm run db:studio    # open Drizzle Studio
+npm run db:seed      # tsx scripts/seed.ts
+```
+
+After any non-trivial change: `npm run typecheck && npm run lint`.
+
+## Things to avoid
+
+- Importing `db` from a component or route handler (bypasses the service).
+- Inlining cache keys as magic strings.
+- Storing money as floats or rupees.
+- Creating `tailwind.config.js` (v4 uses `@theme` in CSS).
+- Reading `process.env` directly in feature code.
+- Adding dependencies without checking if an existing lib covers it (zod,
+  drizzle, lucide, radix primitives are already here).
+- Writing `--no-verify` on git commits.

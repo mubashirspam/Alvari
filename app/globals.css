@@ -12,7 +12,7 @@
   --font-serif: var(--font-dm-serif), Georgia, serif;
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
 
-  --ease-kaasth: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-alvari: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 html {
@@ -111,8 +111,8 @@ a {
   opacity: 0;
   transform: translateY(40px);
   transition:
-    opacity 0.9s var(--ease-kaasth),
-    transform 0.9s var(--ease-kaasth);
+    opacity 0.9s var(--ease-alvari),
+    transform 0.9s var(--ease-alvari);
 }
 
 .reveal.is-in {
