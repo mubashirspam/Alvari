@@ -35,8 +35,8 @@ Components never touch `db` or `cached()` directly. Routes never touch `db`.
 
 3. **Generate + apply the migration**:
    ```bash
-   npm run db:generate   # writes SQL into ./drizzle/
-   npm run db:push       # applies to Neon (prototyping)
+   pnpm db:generate   # writes SQL into ./drizzle/
+   pnpm db:push       # applies to Neon (prototyping)
    ```
    Do NOT hand-edit generated SQL.
 
@@ -124,8 +124,8 @@ Components never touch `db` or `cached()` directly. Routes never touch `db`.
 
 11. **Verify**:
     ```bash
-    npm run typecheck
-    npm run lint
+    pnpm typecheck
+    pnpm lint
     ```
 
 ## Checks before reporting done
@@ -136,4 +136,4 @@ Components never touch `db` or `cached()` directly. Routes never touch `db`.
 - [ ] Zod validation lives in the service (not duplicated in the route).
 - [ ] Money columns are integer paise.
 - [ ] Every filtered/sorted column has an index.
-- [ ] `npm run typecheck` passes.
+- [ ] `pnpm typecheck` passes.

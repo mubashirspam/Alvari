@@ -75,8 +75,8 @@ temptation to import `db` or `cached` from a component or route handler.
   with `formatINR(paise / 100)` from `lib/utils.ts`. Never store floats.
 - IDs are `uuid defaultRandom()`. Slugs are the human-facing identifier for
   products.
-- To change the schema: edit `lib/db/schema.ts` → `npm run db:generate` to
-  produce a migration in `drizzle/` → `npm run db:push` (prototyping) or
+- To change the schema: edit `lib/db/schema.ts` → `pnpm db:generate` to
+  produce a migration in `drizzle/` → `pnpm db:push` (prototyping) or
   commit the SQL for prod. Never edit generated migrations by hand.
 - Add an index for any column you filter or order on.
 
@@ -148,18 +148,21 @@ temptation to import `db` or `cached` from a component or route handler.
 
 ## Commands
 
+This project uses **pnpm**. Do not use `npm` or `yarn` — a `preinstall` hook
+will block non-pnpm installs.
+
 ```
-npm run dev          # Next dev server
-npm run build        # production build
-npm run typecheck    # tsc --noEmit  (run before claiming a task is done)
-npm run lint         # eslint
-npm run db:generate  # new Drizzle migration from schema.ts
-npm run db:push      # push schema to Neon (prototyping only)
-npm run db:studio    # open Drizzle Studio
-npm run db:seed      # tsx scripts/seed.ts
+pnpm dev          # Next dev server
+pnpm build        # production build
+pnpm typecheck    # tsc --noEmit  (run before claiming a task is done)
+pnpm lint         # eslint
+pnpm db:generate  # new Drizzle migration from schema.ts
+pnpm db:push      # push schema to Neon (prototyping only)
+pnpm db:studio    # open Drizzle Studio
+pnpm db:seed      # tsx scripts/seed.ts
 ```
 
-After any non-trivial change: `npm run typecheck && npm run lint`.
+After any non-trivial change: `pnpm typecheck && pnpm lint`.
 
 ## Things to avoid
 

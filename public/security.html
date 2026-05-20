@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alvari — Security Playbook</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #080909;
+  --s1: #0f1010;
+  --s2: #151717;
+  --s3: #1c1e1e;
+  --border: #222525;
+  --border2: #2a2d2d;
+  --ink: #d4d8d8;
+  --muted: #7a8282;
+  --dim: #454a4a;
+  --red: #ff4d4d;
+  --red-s: #1a0a0a;
+  --red-d: #4a1515;
+  --amber: #f5a623;
+  --amber-s: #1a1205;
+  --amber-d: #4a3510;
+  --green: #3ddc84;
+  --green-s: #071510;
+  --green-d: #124a2a;
+  --blue: #4da6ff;
+  --blue-s: #060f1a;
+  --blue-d: #0f2d4a;
+  --purple: #b06dff;
+  --purple-s: #0d0818;
+  --purple-d: #2d1a4a;
+  --cyan: #2dd4bf;
+  --cyan-s: #061512;
+  --cyan-d: #0f3d35;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1020px; margin: 0 auto; padding: 40px 20px 100px; }
+
+/* ── HERO ── */
+.hero {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: 'SECURITY';
+  position: absolute;
+  right: -10px; top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 80px; font-weight: 600;
+  color: rgba(255,77,77,0.04);
+  letter-spacing: 0.1em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.hero-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--red);
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.hero-eyebrow::before {
+  content: '';
+  display: inline-block; width: 6px; height: 6px;
+  background: var(--red); border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+}
+.hero h1 {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: clamp(26px, 4vw, 40px);
+  font-weight: 700; color: #fff;
+  line-height: 1.1; margin-bottom: 10px;
+}
+.hero h1 em { font-style: normal; color: var(--red); }
+.hero p { color: var(--muted); font-size: 13px; max-width: 580px; margin-bottom: 22px; }
+.mpills { display: flex; flex-wrap: wrap; gap: 7px; }
+.mpill {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; padding: 3px 10px;
+  border-radius: 4px; border: 1px solid var(--border2); color: var(--muted);
+}
+.mpill.r { border-color: var(--red-d); color: var(--red); background: var(--red-s); }
+.mpill.g { border-color: var(--green-d); color: var(--green); background: var(--green-s); }
+
+/* ── NAV ── */
+.nav {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-bottom: 28px;
+}
+.nav-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 14px;
+}
+.nav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px; }
+.nav-a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 6px;
+  text-decoration: none; transition: background 0.12s;
+}
+.nav-a:hover { background: var(--s2); }
+.nav-icon { font-size: 14px; flex-shrink: 0; }
+.nav-text { font-size: 12px; color: var(--muted); }
+.nav-badge {
+  margin-left: auto; font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; padding: 2px 6px; border-radius: 3px;
+  font-weight: 600; letter-spacing: 0.06em; flex-shrink: 0;
+}
+.nb-r { background: var(--red-s); color: var(--red); border: 1px solid var(--red-d); }
+.nb-a { background: var(--amber-s); color: var(--amber); border: 1px solid var(--amber-d); }
+.nb-g { background: var(--green-s); color: var(--green); border: 1px solid var(--green-d); }
+.nb-b { background: var(--blue-s); color: var(--blue); border: 1px solid var(--blue-d); }
+.nb-p { background: var(--purple-s); color: var(--purple); border: 1px solid var(--purple-d); }
+.nb-c { background: var(--cyan-s); color: var(--cyan); border: 1px solid var(--cyan-d); }
+
+/* ── SECTION ── */
+.sec {
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: 14px; margin-bottom: 18px; overflow: hidden;
+}
+.sec-head {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.sec-icon { font-size: 20px; flex-shrink: 0; }
+.sec-head h2 {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 16px; font-weight: 700; color: #fff; flex: 1;
+}
+.sec-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; padding: 2px 8px; border-radius: 3px; flex-shrink: 0;
+  font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.sec-body { padding: 22px; }
+
+/* ── H3 ── */
+h3 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--dim); margin: 22px 0 10px;
+  padding-bottom: 7px; border-bottom: 1px solid var(--border);
+}
+h3:first-child { margin-top: 0; }
+
+/* ── RULE CARD ── */
+.rules { display: flex; flex-direction: column; gap: 0; }
+.rule {
+  display: grid; grid-template-columns: 28px 1fr;
+  gap: 14px; padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: start;
+}
+.rule:last-child { border-bottom: none; }
+.rule-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--dim); padding-top: 3px; text-align: right;
+}
+.rule-body h4 {
+  font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 3px;
+}
+.rule-body p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.rule-body code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; background: var(--bg);
+  padding: 1px 5px; border-radius: 3px;
+  border: 1px solid var(--border2); color: var(--amber);
+}
+
+/* ── CODE BLOCK ── */
+.cb {
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 14px 16px; margin: 10px 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px; color: #8a9a9a; line-height: 1.7;
+  overflow-x: auto; white-space: pre;
+  position: relative;
+}
+.cb-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--dim);
+  margin-bottom: 6px;
+}
+.hl { color: var(--amber); }
+.g { color: var(--green); }
+.r { color: var(--red); }
+.b { color: var(--blue); }
+.p { color: var(--purple); }
+.c { color: var(--cyan); }
+.dim-t { color: var(--dim); }
+
+/* ── CALLOUT ── */
+.callout {
+  border-radius: 8px; padding: 12px 16px; margin: 12px 0;
+  font-size: 12px; display: flex; gap: 10px; align-items: flex-start;
+}
+.callout .ci { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+.callout .ct strong { display: block; font-size: 13px; margin-bottom: 2px; color: inherit; }
+.c-red { background: var(--red-s); border: 1px solid var(--red-d); color: #ff8080; }
+.c-amber { background: var(--amber-s); border: 1px solid var(--amber-d); color: #c4892a; }
+.c-green { background: var(--green-s); border: 1px solid var(--green-d); color: var(--green); }
+.c-blue { background: var(--blue-s); border: 1px solid var(--blue-d); color: #80c4ff; }
+
+/* ── TABLE ── */
+table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th {
+  background: var(--s2);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em;
+  font-weight: 600; color: var(--muted);
+}
+td { color: var(--ink); }
+tbody tr:hover { background: var(--s2); }
+td strong { color: #fff; }
+td code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; background: var(--bg);
+  padding: 1px 5px; border-radius: 3px;
+  border: 1px solid var(--border2); color: var(--amber);
+}
+
+/* ── GRID ── */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+@media(max-width: 640px) { .g2 { grid-template-columns: 1fr; } }
+.tile {
+  background: var(--s2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 14px;
+}
+.tile h4 { font-size: 12px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+.tile ul { list-style: none; padding: 0; }
+.tile ul li {
+  font-size: 11px; color: var(--muted);
+  padding: 3px 0 3px 14px; position: relative;
+  border-bottom: 1px solid var(--border);
+}
+.tile ul li:last-child { border-bottom: none; }
+.tile ul li::before { content: '→'; position: absolute; left: 0; color: var(--dim); }
+
+/* ── CHECKLIST ── */
+.chk { list-style: none; padding: 0; }
+.chk li {
+  font-size: 12px; color: var(--muted);
+  padding: 6px 0 6px 26px; position: relative;
+  border-bottom: 1px solid var(--border);
+}
+.chk li:last-child { border-bottom: none; }
+.chk li::before {
+  content: '□';
+  position: absolute; left: 2px;
+  color: var(--dim); font-size: 14px;
+}
+.chk li strong { color: #fff; }
+
+/* ── LEVEL BADGE ── */
+.lvl {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  padding: 2px 8px; border-radius: 3px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  vertical-align: middle; margin-left: 6px;
+}
+.lvl-critical { background: var(--red-s); color: var(--red); border: 1px solid var(--red-d); }
+.lvl-high { background: var(--amber-s); color: var(--amber); border: 1px solid var(--amber-d); }
+.lvl-medium { background: var(--blue-s); color: var(--blue); border: 1px solid var(--blue-d); }
+.lvl-low { background: var(--green-s); color: var(--green); border: 1px solid var(--green-d); }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+/* ── STAFF TABLE ── */
+.staff-flow {
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 16px; margin: 10px 0;
+}
+.staff-flow .sf-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.staff-flow .sf-row:last-child { border-bottom: none; }
+.sf-step {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; color: var(--dim);
+  min-width: 32px; text-align: right;
+}
+.sf-arrow { color: var(--dim); flex-shrink: 0; }
+.sf-action { color: var(--ink); flex: 1; }
+.sf-note { font-size: 11px; color: var(--muted); margin-left: auto; text-align: right; max-width: 200px; }
+
+footer {
+  text-align: center; color: var(--dim);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; margin-top: 40px;
+  padding-top: 20px; border-top: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-eyebrow">Alvari Security Playbook</div>
+  <h1>Security from <em>Day One.</em></h1>
+  <p>Complete security reference for Admin Panel, Web, Flutter App, Backend API, and Database. Covers access control, secrets management, data protection, and staff onboarding.</p>
+  <div class="mpills">
+    <span class="mpill r">Owner: Nizamudheen KC</span>
+    <span class="mpill g">Stack: Next.js · Neon · Flutter · Vercel</span>
+    <span class="mpill">Updated: May 2026</span>
+    <span class="mpill">v1.0</span>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-label">Security Sections</div>
+  <div class="nav-grid">
+    <a href="#admin" class="nav-a"><span class="nav-icon">🔐</span><span class="nav-text">Admin Panel Security</span><span class="nav-badge nb-r">CRITICAL</span></a>
+    <a href="#backend" class="nav-a"><span class="nav-icon">⚙️</span><span class="nav-text">Backend API Security</span><span class="nav-badge nb-r">CRITICAL</span></a>
+    <a href="#auth" class="nav-a"><span class="nav-icon">🪪</span><span class="nav-text">Auth + JWT Security</span><span class="nav-badge nb-r">CRITICAL</span></a>
+    <a href="#web" class="nav-a"><span class="nav-icon">🌐</span><span class="nav-text">Web Frontend Security</span><span class="nav-badge nb-a">HIGH</span></a>
+    <a href="#flutter" class="nav-a"><span class="nav-icon">📱</span><span class="nav-text">Flutter App Security</span><span class="nav-badge nb-a">HIGH</span></a>
+    <a href="#db" class="nav-a"><span class="nav-icon">🗄️</span><span class="nav-text">Database Security</span><span class="nav-badge nb-r">CRITICAL</span></a>
+    <a href="#secrets" class="nav-a"><span class="nav-icon">🔑</span><span class="nav-text">Secrets Management</span><span class="nav-badge nb-r">CRITICAL</span></a>
+    <a href="#wa" class="nav-a"><span class="nav-icon">💬</span><span class="nav-text">WhatsApp API Security</span><span class="nav-badge nb-a">HIGH</span></a>
+    <a href="#payments" class="nav-a"><span class="nav-icon">💳</span><span class="nav-text">Payments Security</span><span class="nav-badge nb-r">CRITICAL</span></a>
+    <a href="#staff" class="nav-a"><span class="nav-icon">👥</span><span class="nav-text">Staff Access Management</span><span class="nav-badge nb-b">MEDIUM</span></a>
+    <a href="#monitoring" class="nav-a"><span class="nav-icon">📡</span><span class="nav-text">Monitoring + Alerting</span><span class="nav-badge nb-b">MEDIUM</span></a>
+    <a href="#checklist" class="nav-a"><span class="nav-icon">✅</span><span class="nav-text">Launch Security Checklist</span><span class="nav-badge nb-g">CHECKLIST</span></a>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 1: ADMIN PANEL -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="admin">
+  <div class="sec-head">
+    <span class="sec-icon">🔐</span>
+    <h2>Admin Panel Security</h2>
+    <span class="sec-tag nb-r">CRITICAL</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>Layer 1 — Return 404, Not 401</h3>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:10px;">Never confirm the admin panel exists to an unauthenticated visitor. 401/403 tells an attacker "this route exists, keep trying." 404 tells them nothing.</p>
+    <div class="cb-label">middleware.ts</div>
+    <div class="cb"><span class="dim-t">// ✗ WRONG — confirms admin exists</span>
+<span class="r">return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })</span>
+
+<span class="dim-t">// ✓ CORRECT — admin panel is invisible to attackers</span>
+<span class="g">if (!isValidAdminJWT(request)) {
+  return NextResponse.notFound()  // returns 404
+}</span></div>
+
+    <h3>Layer 2 — IP Allowlist (Most Effective)</h3>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:10px;">Only your IP and your staff's IPs can reach <code>/admin</code>. Someone in Germany who finds the URL gets a 404 regardless of credentials. Update the list when staff join or their IP changes.</p>
+    <div class="cb-label">middleware.ts — IP allowlist</div>
+    <div class="cb"><span class="b">const ADMIN_ALLOWED_IPS = [
+  process.env.OWNER_IP,        <span class="dim-t">// Your home/office IP</span>
+  process.env.STAFF_IP_1,      <span class="dim-t">// Staff member 1</span>
+  process.env.STAFF_IP_2,      <span class="dim-t">// Staff member 2 (add as team grows)</span>
+]</span>
+
+export function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim()
+
+    <span class="dim-t">// Step 1: IP check first (cheapest check)</span>
+    if (!ADMIN_ALLOWED_IPS.includes(ip)) {
+      <span class="g">return NextResponse.notFound()  // Not even a login page shown</span>
+    }
+
+    <span class="dim-t">// Step 2: JWT check</span>
+    const token = request.cookies.get('admin_token')?.value
+    if (!isValidAdminJWT(token)) {
+      <span class="g">return NextResponse.notFound()</span>
+    }
+  }
+}</div>
+
+    <div class="callout c-amber">
+      <span class="ci">⚠</span>
+      <div class="ct"><strong>Dynamic IP Problem</strong> If your home internet has a dynamic IP (changes on router restart), store IPs in environment variables and update them when they change. Alternatively, use a VPN with a fixed exit IP — all admin access goes through VPN.</div>
+    </div>
+
+    <h3>Layer 3 — Admin-Only Phone Numbers</h3>
+    <div class="cb-label">.env</div>
+    <div class="cb"><span class="hl">ADMIN_PHONE_NUMBERS="+919876543210,+919876543211"</span>
+<span class="dim-t"># Only these numbers can ever receive an admin OTP
+# No UI to "register as admin" — hardcoded in env always</span></div>
+    <div class="cb-label">lib/auth/neon-auth.ts</div>
+    <div class="cb">const adminPhones = process.env.ADMIN_PHONE_NUMBERS?.split(',') ?? []
+
+export async function verifyAdminOTP(phone: string, otp: string) {
+  <span class="g">if (!adminPhones.includes(phone)) {
+    return { error: 'not_found' }  // 404 behaviour, no info leak
+  }</span>
+  <span class="dim-t">// proceed with OTP verification...</span>
+}</div>
+
+    <h3>Layer 4 — OTP Rate Limiting</h3>
+    <div class="cb-label">lib/auth/rate-limit.ts — Upstash Redis</div>
+    <div class="cb"><span class="dim-t">// 5 failed OTP attempts → lock phone for 30 minutes
+// Prevents brute-force OTP guessing</span>
+const key = <span class="hl">`otp:attempts:${phone}`</span>
+const attempts = await redis.incr(key)
+if (attempts === 1) await redis.expire(key, 1800) <span class="dim-t">// 30 min TTL</span>
+
+if (attempts > 5) {
+  <span class="r">return { error: 'too_many_attempts', retry_after: '30 minutes' }</span>
+}</div>
+
+    <h3>Layer 5 — Admin Session Security</h3>
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-num">01</div>
+        <div class="rule-body">
+          <h4>Short session expiry for admin</h4>
+          <p>Customer JWT expires in 7 days. Admin JWT expires in <code>8 hours</code>. Admin session ends at end of workday, always.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">02</div>
+        <div class="rule-body">
+          <h4>HttpOnly + Secure + SameSite cookie</h4>
+          <p>Admin token stored as <code>httpOnly</code> cookie. JavaScript on the page cannot read it. XSS attacks cannot steal it.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">03</div>
+        <div class="rule-body">
+          <h4>Session invalidation on logout</h4>
+          <p>Store a <code>session_id</code> in <code>admin_sessions</code> table. On logout, delete the row. JWT is now invalid even if someone stole the token before expiry.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">04</div>
+        <div class="rule-body">
+          <h4>No "remember me" for admin</h4>
+          <p>Customers can have persistent sessions. Admin never. Every new browser session requires fresh OTP. Non-negotiable.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout c-red">
+      <span class="ci">🛑</span>
+      <div class="ct"><strong>Summary: 4 layers protect admin panel</strong> IP allowlist → 404 on fail → OTP to approved phone only → Rate limit attempts → 8h JWT with server-side invalidation. An attacker needs to bypass ALL four. That is practically impossible without physical access to your phone and network.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 2: BACKEND API -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="backend">
+  <div class="sec-head">
+    <span class="sec-icon">⚙️</span>
+    <h2>Backend API Security</h2>
+    <span class="sec-tag nb-r">CRITICAL</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>Route-Level Authorization</h3>
+    <div class="cb-label">Every API route must follow this pattern</div>
+    <div class="cb"><span class="dim-t">// 3-check pattern for every protected route</span>
+export async function POST(request: NextRequest) {
+
+  <span class="dim-t">// 1. Is user authenticated?</span>
+  const user = await getAuthUser(request)
+  if (!user) <span class="r">return NextResponse.json({ error: 'not_found' }, { status: 404 })</span>
+
+  <span class="dim-t">// 2. Does user have permission for THIS action?</span>
+  if (user.role !== 'admin') <span class="r">return NextResponse.json({ error: 'not_found' }, { status: 404 })</span>
+
+  <span class="dim-t">// 3. Does user own THIS resource? (for user-scoped actions)</span>
+  if (order.userId !== user.id) <span class="r">return NextResponse.json({ error: 'not_found' }, { status: 404 })</span>
+
+  <span class="g">// Safe to proceed</span>
+}</div>
+
+    <h3>Input Validation — Zod on Every Route</h3>
+    <div class="cb-label">features/orders/schema.ts</div>
+    <div class="cb"><span class="dim-t">// Validate and sanitize ALL incoming data — never trust client input</span>
+const CreateOrderSchema = z.object({
+  <span class="hl">productId: z.string().uuid(),</span>
+  <span class="hl">qty: z.number().int().min(1).max(100),</span>
+  <span class="hl">addressId: z.string().uuid(),</span>
+  <span class="dim-t">// Never accept price from client — always read from DB</span>
+})
+
+<span class="dim-t">// In route handler:</span>
+const result = CreateOrderSchema.safeParse(await request.json())
+if (!result.success) <span class="r">return NextResponse.json({ error: 'invalid_input' }, { status: 400 })</span></div>
+
+    <div class="callout c-red">
+      <span class="ci">🛑</span>
+      <div class="ct"><strong>Never Accept Price from Client</strong> Never let the client send the price. Always read price from the database. A customer who sends <code>price: 1</code> in the request body should not get a sofa for ₹1. This is the most common e-commerce attack.</div>
+    </div>
+
+    <h3>Rate Limiting — All Public Endpoints</h3>
+    <table>
+      <thead><tr><th>Endpoint</th><th>Limit</th><th>Window</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST /api/v1/auth/send-otp</code></td><td>3 requests</td><td>Per phone / 10 min</td><td>Prevent OTP spam / WA cost abuse</td></tr>
+        <tr><td><code>POST /api/v1/leads</code></td><td>5 requests</td><td>Per IP / hour</td><td>Prevent lead spam</td></tr>
+        <tr><td><code>POST /api/v1/vr/render</code></td><td>3 requests</td><td>Per user / day (free)</td><td>GPU cost protection</td></tr>
+        <tr><td><code>GET /api/v1/products</code></td><td>100 requests</td><td>Per IP / min</td><td>Scraping protection</td></tr>
+        <tr><td>All admin POST/PATCH/DELETE</td><td>30 requests</td><td>Per user / min</td><td>Runaway script protection</td></tr>
+      </tbody>
+    </table>
+
+    <h3>CORS Configuration</h3>
+    <div class="cb-label">next.config.ts</div>
+    <div class="cb"><span class="dim-t">// Only your own domains can call your API</span>
+const ALLOWED_ORIGINS = [
+  <span class="g">'https://alvari.com'</span>,
+  <span class="g">'https://www.alvari.com'</span>,
+  <span class="dim-t">// NO wildcards (*) — ever</span>
+]
+
+<span class="dim-t">// Flutter app uses JWT Bearer token — no CORS needed for mobile
+// CORS is browser-only protection</span></div>
+
+    <h3>Security Headers (Vercel)</h3>
+    <div class="cb-label">next.config.ts — headers()</div>
+    <div class="cb">headers: [
+  { key: <span class="hl">'X-Frame-Options'</span>,        value: <span class="g">'DENY'</span> },
+  { key: <span class="hl">'X-Content-Type-Options'</span>,  value: <span class="g">'nosniff'</span> },
+  { key: <span class="hl">'Referrer-Policy'</span>,          value: <span class="g">'strict-origin-when-cross-origin'</span> },
+  { key: <span class="hl">'Permissions-Policy'</span>,        value: <span class="g">'camera=(), microphone=(), geolocation=()'</span> },
+  { key: <span class="hl">'Strict-Transport-Security'</span>, value: <span class="g">'max-age=63072000; includeSubDomains'</span> },
+  { key: <span class="hl">'Content-Security-Policy'</span>,   value: <span class="g">"default-src 'self'; img-src 'self' ik.imagekit.io data:"</span> },
+]</div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 3: AUTH + JWT -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="auth">
+  <div class="sec-head">
+    <span class="sec-icon">🪪</span>
+    <h2>Auth + JWT Security</h2>
+    <span class="sec-tag nb-r">CRITICAL</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>JWT Best Practices</h3>
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-num">01</div>
+        <div class="rule-body">
+          <h4>Strong secret — minimum 256-bit random</h4>
+          <p>Generate with: <code>openssl rand -hex 32</code>. Store in Vercel env vars. Never in code. Never in git. Rotate every 90 days.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">02</div>
+        <div class="rule-body">
+          <h4>Minimal payload — no sensitive data in JWT</h4>
+          <p>JWT payload: <code>{ sub: userId, role, phone, iat, exp }</code>. Never put full name, email, address, order history in the token. JWT body is base64 — readable by anyone.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">03</div>
+        <div class="rule-body">
+          <h4>Different expiry for customer vs admin</h4>
+          <p>Customer JWT: <code>exp: 7d</code>. Admin JWT: <code>exp: 8h</code>. Admin sessions are always short.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">04</div>
+        <div class="rule-body">
+          <h4>Server-side session tracking for admin</h4>
+          <p>Store <code>session_id</code> in JWT + in <code>admin_sessions</code> DB table. Validate both on each request. Logout = delete DB row = instant invalidation across all devices.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">05</div>
+        <div class="rule-body">
+          <h4>Verify algorithm explicitly</h4>
+          <p>Always set <code>algorithms: ['HS256']</code> in JWT verify. The "alg: none" attack is real — never let the library accept any algorithm.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Token Storage — Web vs Flutter</h3>
+    <table>
+      <thead><tr><th>Client</th><th>Where to Store</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Web (Next.js)</strong></td><td><code>httpOnly; Secure; SameSite=Strict</code> cookie</td><td>JS on page cannot read it. XSS cannot steal it. Browser sends it automatically.</td></tr>
+        <tr><td><strong>Flutter App</strong></td><td><code>flutter_secure_storage</code> (iOS Keychain / Android Keystore)</td><td>OS-level encryption. Not accessible to other apps. Not in SharedPreferences (plaintext).</td></tr>
+        <tr><td><strong>Never</strong></td><td><code>localStorage</code>, <code>sessionStorage</code>, SharedPreferences</td><td>Plaintext storage. XSS or any other app can read it. Token theft = account takeover.</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 4: WEB FRONTEND -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="web">
+  <div class="sec-head">
+    <span class="sec-icon">🌐</span>
+    <h2>Web Frontend Security</h2>
+    <span class="sec-tag nb-a">HIGH</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>XSS Prevention</h3>
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-num">01</div>
+        <div class="rule-body">
+          <h4>Never use dangerouslySetInnerHTML with user data</h4>
+          <p>Product descriptions, user names, review text — all must go through React's default JSX rendering which escapes HTML automatically. If you must render HTML (e.g. rich descriptions), use a sanitizer like <code>DOMPurify</code> first.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">02</div>
+        <div class="rule-body">
+          <h4>Sanitize all user-generated content before display</h4>
+          <p>Any text that a user typed and is shown to other users (reviews, community posts, referral names) must be sanitized. <code>npm install dompurify</code> for client-side, <code>sanitize-html</code> for server-side.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">03</div>
+        <div class="rule-body">
+          <h4>Content Security Policy header</h4>
+          <p>CSP header (see Backend section) tells the browser which scripts and sources are allowed to run. Stops injected scripts even if XSS gets through.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Form Security</h3>
+    <div class="g2">
+      <div class="tile">
+        <h4>CSRF Protection</h4>
+        <ul>
+          <li>Next.js Server Actions have built-in CSRF protection</li>
+          <li>For API routes: SameSite=Strict cookie blocks cross-site requests</li>
+          <li>Add <code>Origin</code> header check on state-changing routes</li>
+          <li>Never use GET requests for state-changing actions</li>
+        </ul>
+      </div>
+      <div class="tile">
+        <h4>Input Length Limits</h4>
+        <ul>
+          <li>Phone: exactly 10 digits (after +91 strip)</li>
+          <li>Name: max 100 chars</li>
+          <li>Address: max 500 chars</li>
+          <li>Any text field: set maxLength on input AND validate on backend</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Sensitive Data — Never in Frontend</h3>
+    <table>
+      <thead><tr><th>Data</th><th>Rule</th></tr></thead>
+      <tbody>
+        <tr><td>Razorpay Key Secret</td><td>Backend only. Frontend uses only the public Razorpay Key ID.</td></tr>
+        <tr><td>WhatsApp API token</td><td>Backend only. Never in page source, never in JS bundle.</td></tr>
+        <tr><td>Anthropic API key</td><td>Backend only. AI calls made server-side always.</td></tr>
+        <tr><td>Other users' data</td><td>API routes must only return data for the authenticated user. Never expose other users' phone, email, or order data.</td></tr>
+        <tr><td>Admin routes/logic</td><td>Admin UI components must be in separate files. Never ship admin UI code in the customer bundle.</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 5: FLUTTER APP -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="flutter">
+  <div class="sec-head">
+    <span class="sec-icon">📱</span>
+    <h2>Flutter App Security</h2>
+    <span class="sec-tag nb-a">HIGH</span>
+  </div>
+  <div class="sec-body">
+
+    <div class="callout c-red">
+      <span class="ci">🛑</span>
+      <div class="ct"><strong>Core Rule: The Flutter App is Untrusted.</strong> Anyone can decompile an APK in minutes. Assume every string, every URL, every key inside the app binary is public. Never put anything secret in the app. All secrets live on the backend.</div>
+    </div>
+
+    <h3>What NEVER Goes in the Flutter App</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Why</th><th>Where It Goes Instead</th></tr></thead>
+      <tbody>
+        <tr><td>Razorpay Key Secret</td><td>APK reverse-engineering exposes it</td><td>Backend — Razorpay order created server-side</td></tr>
+        <tr><td>WhatsApp API token</td><td>Same — any secret in app binary is public</td><td>Backend only</td></tr>
+        <tr><td>Anthropic API key</td><td>Same</td><td>Backend only</td></tr>
+        <tr><td>Database connection string</td><td>Gives direct DB access to anyone</td><td>Backend only, never in any client</td></tr>
+        <tr><td>Admin credentials</td><td>App users are customers, not admins</td><td>Admin is web-only</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Token Storage</h3>
+    <div class="cb-label">pubspec.yaml + usage</div>
+    <div class="cb">dependencies:
+  <span class="hl">flutter_secure_storage: ^9.0.0</span>  <span class="dim-t"># iOS Keychain / Android Keystore</span>
+
+<span class="dim-t">// Store JWT after login</span>
+final storage = FlutterSecureStorage()
+<span class="g">await storage.write(key: 'auth_token', value: jwt)</span>
+
+<span class="dim-t">// Read JWT for API calls</span>
+<span class="g">final token = await storage.read(key: 'auth_token')</span>
+
+<span class="r">// ✗ NEVER do this</span>
+<span class="r">SharedPreferences.setString('auth_token', jwt)  // Plaintext!</span></div>
+
+    <h3>Network Security</h3>
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-num">01</div>
+        <div class="rule-body">
+          <h4>Certificate Pinning</h4>
+          <p>Pin your API domain's SSL certificate in the Flutter app. Prevents man-in-the-middle attacks on public WiFi. Use <code>http_certificate_pinning</code> package. Store the certificate hash, not the certificate itself.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">02</div>
+        <div class="rule-body">
+          <h4>HTTPS only — no HTTP fallback</h4>
+          <p>In <code>AndroidManifest.xml</code>: <code>android:usesCleartextTraffic="false"</code>. In iOS info.plist: disable NSAllowsArbitraryLoads. App must reject any HTTP connection.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">03</div>
+        <div class="rule-body">
+          <h4>API base URL from environment, not hardcoded</h4>
+          <p>Use <code>--dart-define=API_URL=https://alvari.com</code> at build time. Not hardcoded in source. Makes it easy to switch environments (staging vs production) without code changes.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>App Hardening</h3>
+    <div class="g2">
+      <div class="tile">
+        <h4>Android</h4>
+        <ul>
+          <li>Enable ProGuard / R8 code obfuscation</li>
+          <li>Set <code>debuggable: false</code> in release build</li>
+          <li>Disable backup: <code>android:allowBackup="false"</code></li>
+          <li>Root detection: block app on rooted devices (optional)</li>
+        </ul>
+      </div>
+      <div class="tile">
+        <h4>iOS</h4>
+        <ul>
+          <li>Enable Bitcode for obfuscation</li>
+          <li>Set release scheme, not debug</li>
+          <li>No sensitive data in NSLog (stripped in release)</li>
+          <li>Jailbreak detection: block on jailbroken devices (optional)</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 6: DATABASE -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="db">
+  <div class="sec-head">
+    <span class="sec-icon">🗄️</span>
+    <h2>Database Security</h2>
+    <span class="sec-tag nb-r">CRITICAL</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>Connection Security</h3>
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-num">01</div>
+        <div class="rule-body">
+          <h4>Use Neon's pooled connection string</h4>
+          <p>Neon provides two connection strings: direct and pooled (via PgBouncer). Always use the pooled one in your app. Prevents connection limit exhaustion with serverless functions — the most common Neon scaling issue.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">02</div>
+        <div class="rule-body">
+          <h4>One connection string per environment</h4>
+          <p>Separate Neon branches: <code>main</code> (production), <code>dev</code> (local development), <code>staging</code> (if needed). The production connection string never goes into a dev machine's environment. Never.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">03</div>
+        <div class="rule-body">
+          <h4>Principle of least privilege</h4>
+          <p>Create a dedicated DB user for the app with only SELECT, INSERT, UPDATE, DELETE permissions. No DROP, no CREATE TABLE, no schema changes. Migrations run with a separate admin user, never the app user.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>SQL Injection Prevention</h3>
+    <div class="cb-label">Always use Drizzle ORM — never raw string SQL with user input</div>
+    <div class="cb"><span class="r">// ✗ NEVER — SQL injection vulnerability</span>
+<span class="r">db.execute(`SELECT * FROM products WHERE name = '${userInput}'`)</span>
+
+<span class="g">// ✓ CORRECT — Drizzle parameterizes automatically</span>
+<span class="g">db.select().from(products).where(eq(products.name, userInput))</span>
+
+<span class="dim-t">// If raw SQL is ever needed (it shouldn't be), use parameterized queries:</span>
+db.execute(sql`SELECT * FROM products WHERE name = ${userInput}`)</div>
+
+    <h3>Sensitive Data at Rest</h3>
+    <table>
+      <thead><tr><th>Column</th><th>How to Store</th></tr></thead>
+      <tbody>
+        <tr><td>Phone numbers</td><td>Plain (it's a contact field). Index it. It's not a secret.</td></tr>
+        <tr><td>OTP codes</td><td>Store as <strong>hash only</strong> (bcrypt). Never store plain OTP. Compare hash on verify.</td></tr>
+        <tr><td>Admin session tokens</td><td>Store as SHA-256 hash only. Token itself only lives in the cookie.</td></tr>
+        <tr><td>Razorpay payment IDs</td><td>Plain — they are public transaction IDs, not secrets.</td></tr>
+        <tr><td>Customer addresses</td><td>Plain — needed for delivery. Neon encrypts disk at rest by default.</td></tr>
+        <tr><td>Passwords</td><td>Not applicable — you use WhatsApp OTP, no passwords. Keep it this way.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Backups</h3>
+    <div class="callout c-blue">
+      <span class="ci">ℹ</span>
+      <div class="ct"><strong>Neon handles backups automatically</strong> — point-in-time restore for 7 days on free tier, 30 days on paid. Enable the paid plan before you have real orders. Additionally, set up a weekly pg_dump export to an S3 bucket or Google Drive as a secondary backup. Test a restore every month.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 7: SECRETS MANAGEMENT -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="secrets">
+  <div class="sec-head">
+    <span class="sec-icon">🔑</span>
+    <h2>Secrets Management</h2>
+    <span class="sec-tag nb-r">CRITICAL</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>The Complete Secrets Map</h3>
+    <table>
+      <thead><tr><th>Secret</th><th>Where Stored</th><th>Who Has Access</th><th>Rotation</th></tr></thead>
+      <tbody>
+        <tr><td><code>DATABASE_URL</code></td><td>Vercel env (production only)</td><td>Only Vercel serverless functions</td><td>On suspected leak</td></tr>
+        <tr><td><code>JWT_SECRET</code></td><td>Vercel env</td><td>Only backend auth functions</td><td>Every 90 days</td></tr>
+        <tr><td><code>WA_ACCESS_TOKEN</code></td><td>Vercel env</td><td>Only WA client lib</td><td>Every 60 days</td></tr>
+        <tr><td><code>WA_VERIFY_TOKEN</code></td><td>Vercel env</td><td>Only webhook handler</td><td>On suspected leak</td></tr>
+        <tr><td><code>RAZORPAY_KEY_SECRET</code></td><td>Vercel env</td><td>Only payment service</td><td>Every 90 days</td></tr>
+        <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Vercel env</td><td>Only AI service functions</td><td>Every 90 days</td></tr>
+        <tr><td><code>IMAGEKIT_PRIVATE_KEY</code></td><td>Vercel env</td><td>Only upload handler</td><td>Every 90 days</td></tr>
+        <tr><td><code>ADMIN_PHONE_NUMBERS</code></td><td>Vercel env</td><td>Only admin auth</td><td>When staff changes</td></tr>
+        <tr><td><code>ADMIN_ALLOWED_IPS</code></td><td>Vercel env</td><td>Only middleware</td><td>When IPs change</td></tr>
+      </tbody>
+    </table>
+
+    <h3>The Rules</h3>
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-num">01</div>
+        <div class="rule-body">
+          <h4>Never commit secrets to git</h4>
+          <p>Add <code>.env.local</code>, <code>.env.production</code>, <code>.env</code> to <code>.gitignore</code> immediately. If you ever accidentally push a secret, rotate it within minutes — assume it was already scraped by bots.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">02</div>
+        <div class="rule-body">
+          <h4>Separate env per environment</h4>
+          <p>Vercel has Production, Preview, and Development environments. Production secrets only go in Production. Development uses test keys (Razorpay test mode, Neon dev branch) — never real keys locally.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">03</div>
+        <div class="rule-body">
+          <h4>Scope secrets to the function that needs them</h4>
+          <p>Don't dump every secret in one <code>config.ts</code> file. Import <code>process.env.RAZORPAY_KEY_SECRET</code> only inside <code>lib/payments/</code>. If a file doesn't need a secret, it shouldn't import it.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">04</div>
+        <div class="rule-body">
+          <h4>Add secret scanning to your repo</h4>
+          <p>Enable GitHub's secret scanning (free, automatic). It will alert you if you accidentally commit an API key, connection string, or token. Also install the <code>gitleaks</code> pre-commit hook locally.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout c-red">
+      <span class="ci">🛑</span>
+      <div class="ct"><strong>If a Secret Leaks — Act in 5 Minutes</strong> 1. Rotate the leaked key immediately (generate new key in Razorpay/Meta/etc). 2. Update Vercel env var. 3. Redeploy. 4. Check logs for unauthorized usage. Bots scan GitHub commits in under 2 minutes — speed matters.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 8: WHATSAPP SECURITY -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="wa">
+  <div class="sec-head">
+    <span class="sec-icon">💬</span>
+    <h2>WhatsApp API Security</h2>
+    <span class="sec-tag nb-a">HIGH</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>Webhook Verification — First Thing in Handler</h3>
+    <div class="cb-label">app/api/v1/wa/webhook/route.ts</div>
+    <div class="cb"><span class="dim-t">// Meta signs every webhook with HMAC-SHA256
+// Verify BEFORE processing anything</span>
+export async function POST(request: NextRequest) {
+  const body = await request.text()
+  const signature = request.headers.get('x-hub-signature-256')
+
+  const expectedSig = 'sha256=' + createHmac('sha256', process.env.WA_APP_SECRET!)
+    .update(body).digest('hex')
+
+  <span class="r">if (signature !== expectedSig) {</span>
+  <span class="r">  return NextResponse.json({ error: 'invalid_signature' }, { status: 401 })</span>
+  <span class="r">}</span>
+
+  <span class="g">// Now safe to process the webhook payload</span>
+  const data = JSON.parse(body)
+  <span class="dim-t">// ...</span>
+}</div>
+
+    <h3>Compliance Rules (Meta can ban your number)</h3>
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-num">01</div>
+        <div class="rule-body">
+          <h4>Check opted_in_whatsapp before every send</h4>
+          <p>Every outgoing message — template or free-form — must check <code>user.opted_in_whatsapp === true</code>. One unsolicited message complaint can get your WhatsApp Business number permanently banned.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">02</div>
+        <div class="rule-body">
+          <h4>Only approved templates outside 24h window</h4>
+          <p>Meta allows free-form messages only within 24h of the user's last message. After that, only pre-approved templates. Store <code>last_user_message_at</code> on each lead to enforce this automatically.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">03</div>
+        <div class="rule-body">
+          <h4>Rate limit outgoing messages per user</h4>
+          <p>Max 1 template message per user per 24h for marketing category. Use Upstash Redis to track: <code>wa:sent:{userId}:{date}</code>. Automated broadcasts must respect this or trigger spam reports.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 9: PAYMENTS SECURITY -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="payments">
+  <div class="sec-head">
+    <span class="sec-icon">💳</span>
+    <h2>Payments Security</h2>
+    <span class="sec-tag nb-r">CRITICAL</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>The Payment Security Rules</h3>
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-num">01</div>
+        <div class="rule-body">
+          <h4>Verify Razorpay webhook HMAC before touching any order</h4>
+          <p>Razorpay signs every payment webhook. Verify the signature using <code>RAZORPAY_KEY_SECRET</code> before updating any order status. An attacker can send a fake "payment success" webhook — HMAC verification is the only protection.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">02</div>
+        <div class="rule-body">
+          <h4>Never accept price from client</h4>
+          <p>The order amount is calculated on the backend from the DB price. Frontend sends <code>productId + qty</code>. Backend calculates total. Razorpay order is created with the backend-calculated amount. A ₹1 exploit is impossible this way.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">03</div>
+        <div class="rule-body">
+          <h4>Idempotency — handle duplicate webhooks</h4>
+          <p>Razorpay may send the same webhook multiple times. Use <code>razorpay_payment_id</code> as a deduplication key. Before updating an order: check if <code>payments</code> table already has this payment ID. If yes, skip processing.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">04</div>
+        <div class="rule-body">
+          <h4>Razorpay Key ID vs Key Secret</h4>
+          <p><code>RAZORPAY_KEY_ID</code> is public — it goes in the frontend checkout. <code>RAZORPAY_KEY_SECRET</code> is private — it never leaves the backend. Never confuse the two.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">05</div>
+        <div class="rule-body">
+          <h4>Log all payment events</h4>
+          <p>Every webhook received, every status change, every refund — logged with timestamp, payment ID, amount. Required for dispute resolution. Razorpay also keeps their own logs but you need your own record.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 10: STAFF ACCESS -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="staff">
+  <div class="sec-head">
+    <span class="sec-icon">👥</span>
+    <h2>Staff Access Management</h2>
+    <span class="sec-tag nb-b">MEDIUM</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>How to Onboard a New Staff Member</h3>
+    <div class="staff-flow">
+      <div class="sf-row">
+        <span class="sf-step">01</span>
+        <span class="sf-arrow">→</span>
+        <span class="sf-action">Add their phone number to <code>ADMIN_PHONE_NUMBERS</code> env var in Vercel</span>
+        <span class="sf-note">Redeploy after saving</span>
+      </div>
+      <div class="sf-row">
+        <span class="sf-step">02</span>
+        <span class="sf-arrow">→</span>
+        <span class="sf-action">Add their office/home IP to <code>ADMIN_ALLOWED_IPS</code> env var</span>
+        <span class="sf-note">They can only access from known IPs</span>
+      </div>
+      <div class="sf-row">
+        <span class="sf-step">03</span>
+        <span class="sf-arrow">→</span>
+        <span class="sf-action">In DB: insert row in <code>users</code> with <code>role: "staff"</code> and their phone</span>
+        <span class="sf-note">Role determines what they can see</span>
+      </div>
+      <div class="sf-row">
+        <span class="sf-step">04</span>
+        <span class="sf-arrow">→</span>
+        <span class="sf-action">They login via WhatsApp OTP at <code>alvari.com/admin</code></span>
+        <span class="sf-note">No password to share or forget</span>
+      </div>
+      <div class="sf-row">
+        <span class="sf-step">05</span>
+        <span class="sf-arrow">→</span>
+        <span class="sf-action">Brief them on the NEVER list below</span>
+        <span class="sf-note">5-min verbal walkthrough</span>
+      </div>
+    </div>
+
+    <h3>Staff Roles — Future Plan</h3>
+    <table>
+      <thead><tr><th>Role</th><th>Can See</th><th>Can Do</th><th>Cannot Do</th></tr></thead>
+      <tbody>
+        <tr><td><strong>owner</strong> (you)</td><td>Everything</td><td>Everything</td><td>—</td></tr>
+        <tr><td><strong>sales_staff</strong></td><td>Leads, orders, products</td><td>Reply to leads, update lead stage, view orders</td><td>Edit products, delete, access payments, export data</td></tr>
+        <tr><td><strong>content_staff</strong></td><td>Products, SEO pages, blog</td><td>Edit products, approve AI content drafts</td><td>View leads, orders, payments, user data</td></tr>
+        <tr><td><strong>ops_staff</strong></td><td>Orders, delivery</td><td>Update order status, trigger delivery templates</td><td>View leads, edit products, access payments</td></tr>
+      </tbody>
+    </table>
+
+    <h3>How to Offboard Staff</h3>
+    <div class="staff-flow">
+      <div class="sf-row">
+        <span class="sf-step">01</span>
+        <span class="sf-arrow">→</span>
+        <span class="sf-action">Remove their phone from <code>ADMIN_PHONE_NUMBERS</code> env var</span>
+        <span class="sf-note">Instant — they can no longer receive admin OTP</span>
+      </div>
+      <div class="sf-row">
+        <span class="sf-step">02</span>
+        <span class="sf-arrow">→</span>
+        <span class="sf-action">Remove their IP from <code>ADMIN_ALLOWED_IPS</code></span>
+        <span class="sf-note">Redeploy Vercel after saving both</span>
+      </div>
+      <div class="sf-row">
+        <span class="sf-step">03</span>
+        <span class="sf-arrow">→</span>
+        <span class="sf-action">Delete all rows from <code>admin_sessions</code> for their user_id</span>
+        <span class="sf-note">Invalidates any active sessions immediately</span>
+      </div>
+      <div class="sf-row">
+        <span class="sf-step">04</span>
+        <span class="sf-arrow">→</span>
+        <span class="sf-action">Set <code>users.role = 'inactive'</code> for their record</span>
+        <span class="sf-note">Keeps audit trail but disables access</span>
+      </div>
+    </div>
+
+    <h3>Staff Security Rules (Brief Every New Hire)</h3>
+    <div class="rules">
+      <div class="rule">
+        <div class="rule-num">01</div>
+        <div class="rule-body">
+          <h4>Never share your OTP with anyone</h4>
+          <p>Not even with the owner. OTP is personal. If someone asks for your OTP, it's a social engineering attack. Reject it immediately.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">02</div>
+        <div class="rule-body">
+          <h4>Never access admin on public WiFi</h4>
+          <p>Cafes, airports, hotels — all public WiFi is untrusted. Admin access only from home, office, or mobile data. If travel is needed, use mobile hotspot.</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">03</div>
+        <div class="rule-body">
+          <h4>Never export or screenshot customer data</h4>
+          <p>Phone numbers, addresses, order history are private customer data. No screenshots to personal phones. No CSV exports to personal email. This is both a security rule and a legal requirement (IT Act 2000).</p>
+        </div>
+      </div>
+      <div class="rule">
+        <div class="rule-num">04</div>
+        <div class="rule-body">
+          <h4>Lock screen when stepping away</h4>
+          <p>Admin panel session is 8 hours. But lock your laptop when you step away. Someone walking past an unlocked admin panel is a real threat.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 11: MONITORING -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="monitoring">
+  <div class="sec-head">
+    <span class="sec-icon">📡</span>
+    <h2>Monitoring + Alerting</h2>
+    <span class="sec-tag nb-b">MEDIUM</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>What to Alert On (Your Phone Gets a WA Message)</h3>
+    <table>
+      <thead><tr><th>Event</th><th>Alert To</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>5+ failed admin login attempts from one IP</td><td>Your WA</td><td>Brute-force attack in progress</td></tr>
+        <tr><td>Admin login from new/unknown IP</td><td>Your WA</td><td>Possible account takeover</td></tr>
+        <tr><td>Payment webhook HMAC verification failure</td><td>Your WA</td><td>Someone is sending fake payment webhooks</td></tr>
+        <tr><td>Order total below ₹100 (price manipulation attempt)</td><td>Your WA</td><td>Price injection attack detected</td></tr>
+        <tr><td>API error rate &gt; 5% in 5 minutes</td><td>Sentry + Your WA</td><td>Something is broken in production</td></tr>
+        <tr><td>DB connection pool &gt; 80% full</td><td>Sentry</td><td>Need to scale connections</td></tr>
+        <tr><td>New admin_sessions row created</td><td>Your WA</td><td>Know every time someone logs into admin</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Tools</h3>
+    <div class="g2">
+      <div class="tile">
+        <h4>Sentry (free tier)</h4>
+        <ul>
+          <li>Catches every backend exception</li>
+          <li>Full stack trace + request context</li>
+          <li>Alerts on new error types</li>
+          <li>Performance monitoring (slow queries)</li>
+        </ul>
+      </div>
+      <div class="tile">
+        <h4>Vercel Analytics + Logs</h4>
+        <ul>
+          <li>Request logs for all API routes</li>
+          <li>Edge function logs for middleware</li>
+          <li>Real-time log streaming in dashboard</li>
+          <li>Free on Vercel Pro</li>
+        </ul>
+      </div>
+      <div class="tile">
+        <h4>PostHog</h4>
+        <ul>
+          <li>User session recordings (web)</li>
+          <li>Funnel analysis (where do users drop)</li>
+          <li>Custom security events (failed logins)</li>
+          <li>Free up to 1M events/month</li>
+        </ul>
+      </div>
+      <div class="tile">
+        <h4>Upstash Redis Metrics</h4>
+        <ul>
+          <li>Rate limit hit counts</li>
+          <li>Cache hit/miss ratio</li>
+          <li>Queue depth (for async jobs)</li>
+          <li>Alerts on high ops/sec</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SECTION 12: LAUNCH CHECKLIST -->
+<!-- ══════════════════════════════════════ -->
+<section class="sec" id="checklist">
+  <div class="sec-head">
+    <span class="sec-icon">✅</span>
+    <h2>Launch Security Checklist</h2>
+    <span class="sec-tag nb-g">CHECKLIST</span>
+  </div>
+  <div class="sec-body">
+
+    <h3>Before Going Live — Must Complete All</h3>
+    <ul class="chk">
+      <li><strong>Admin IP allowlist configured</strong> — your home IP in ADMIN_ALLOWED_IPS env var</li>
+      <li><strong>Admin phone numbers configured</strong> — only your number in ADMIN_PHONE_NUMBERS env var</li>
+      <li><strong>JWT secret generated and stored</strong> — <code>openssl rand -hex 32</code>, stored in Vercel env only</li>
+      <li><strong>Admin route returns 404 on unauthorized</strong> — not 401 or 403</li>
+      <li><strong>OTP rate limiting active</strong> — 5 attempts per phone per 30 minutes</li>
+      <li><strong>Admin JWT expiry set to 8 hours</strong> — not 7 days</li>
+      <li><strong>Admin token as httpOnly cookie</strong> — not localStorage</li>
+      <li><strong>.gitignore includes .env files</strong> — check immediately</li>
+      <li><strong>Razorpay webhook HMAC verification implemented</strong> — payment route</li>
+      <li><strong>WhatsApp webhook HMAC verification implemented</strong> — WA route</li>
+      <li><strong>Zod validation on all POST/PATCH routes</strong> — no raw request.json() without schema</li>
+      <li><strong>Price never accepted from client</strong> — always read from DB on order create</li>
+      <li><strong>Security headers configured</strong> — X-Frame-Options, CSP, HSTS etc.</li>
+      <li><strong>CORS restricted to alvari.com only</strong> — no wildcards</li>
+      <li><strong>Sentry initialized</strong> — errors going to dashboard</li>
+      <li><strong>Neon connection pooling enabled</strong> — using pooled connection string</li>
+      <li><strong>Production DB separate from dev DB</strong> — different Neon branches</li>
+      <li><strong>GitHub secret scanning enabled</strong> — in repo Settings → Security</li>
+      <li><strong>Neon paid plan enabled</strong> — before first real order (30-day backup)</li>
+      <li><strong>Flutter: flutter_secure_storage for JWT</strong> — not SharedPreferences</li>
+      <li><strong>Flutter: HTTPS only, no cleartext</strong> — AndroidManifest + iOS plist</li>
+      <li><strong>opted_in_whatsapp check before every WA send</strong> — compliance gate</li>
+    </ul>
+
+    <div class="callout c-green">
+      <span class="ci">✓</span>
+      <div class="ct"><strong>When all 22 items are checked, you're production-secure.</strong> Not perfect — no system is — but significantly more secure than 95% of Indian e-commerce startups at this stage. Revisit this checklist after every major feature ship.</div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  Alvari Security Playbook · v1.0 · marketingnizamudheen@gmail.com · Wayanad, Kerala · May 2026<br>
+  Living document — update after every major feature. Review every 90 days.
+</footer>
+
+</div>
+</body>
+</html>

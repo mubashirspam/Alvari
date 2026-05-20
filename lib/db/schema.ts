@@ -136,6 +136,15 @@ export const blogPosts = pgTable(
     contentMarkdown: text("content_markdown").notNull(),
     authorName: text("author_name").notNull().default("Alvari"),
     readingMinutes: integer("reading_minutes").notNull().default(3),
+    metaTitle: text("meta_title"),
+    metaDescription: text("meta_description"),
+    tags: text("tags").array().notNull().default([]),
+    language: text("language").notNull().default("en"),
+    category: text("category"),
+    topicSlug: text("topic_slug"),
+    generationModel: text("generation_model"),
+    generationInputTokens: integer("generation_input_tokens"),
+    generationOutputTokens: integer("generation_output_tokens"),
     isPublished: boolean("is_published").notNull().default(false),
     publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -150,6 +159,12 @@ export const blogPosts = pgTable(
       table.isPublished,
       table.publishedAt,
     ),
+    index("blog_posts_lang_published_idx").on(
+      table.language,
+      table.isPublished,
+      table.publishedAt,
+    ),
+    index("blog_posts_topic_idx").on(table.topicSlug),
   ],
 );
 

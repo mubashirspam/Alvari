@@ -57,22 +57,24 @@ drizzle.config.ts
 
 ## Setup
 
+> This project uses **pnpm** as the package manager. Install with `npm i -g pnpm` (or `brew install pnpm`) if you don't have it.
+
 ```bash
 # 1. Install
-npm install
+pnpm install
 
 # 2. Copy env
 cp .env.example .env.local
 # …and fill in Neon, Upstash, ImageKit credentials
 
 # 3. Push the Drizzle schema to Neon
-npm run db:push
+pnpm db:push
 
 # 4. Seed the products
-npm run db:seed
+pnpm db:seed
 
 # 5. Start dev
-npm run dev
+pnpm dev
 ```
 
 ## Environment variables
@@ -87,14 +89,14 @@ See `.env.example`. All secrets are server-only except:
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Start Next.js dev server |
-| `npm run build` | Production build |
-| `npm run start` | Run the production build |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run db:generate` | Generate a new Drizzle migration from `lib/db/schema.ts` |
-| `npm run db:push` | Push schema to Neon (prototyping) |
-| `npm run db:studio` | Open Drizzle Studio |
-| `npm run db:seed` | Seed the six showcase products |
+| `pnpm dev` | Start Next.js dev server |
+| `pnpm build` | Production build |
+| `pnpm start` | Run the production build |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm db:generate` | Generate a new Drizzle migration from `lib/db/schema.ts` |
+| `pnpm db:push` | Push schema to Neon (prototyping) |
+| `pnpm db:studio` | Open Drizzle Studio |
+| `pnpm db:seed` | Seed the six showcase products |
 
 ## Caching strategy
 

@@ -66,15 +66,13 @@ export function SiteNav() {
       </ul>
 
       <div className="flex items-center gap-1.5">
-        <a
-          href={`https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent("Hi Alvari, I'd like to know more about your furniture")}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden items-center gap-1.5 rounded-full bg-[var(--color-ink)] px-4 py-2 text-[13px] font-medium text-[var(--color-bg)] transition-all duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] hover:bg-[var(--color-accent)] md:inline-flex"
+        <button
+          onClick={() => window.open(`https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent("Hi Alvari, I'd like to know more about your furniture")}`, "_blank")}
+          className="hidden items-center gap-1.5 rounded-full bg-[var(--color-ink)] px-4 py-2 text-[13px] font-medium text-[var(--color-bg)] transition-all duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] hover:bg-[var(--color-accent)] md:inline-flex cursor-pointer"
         >
           <MessageCircle className="h-3.5 w-3.5" strokeWidth={2} />
           Connect Us
-        </a>
+        </button>
 
         <button
           type="button"
@@ -103,16 +101,16 @@ export function SiteNav() {
               {link.label}
             </Link>
           ))}
-          <a
-            href={`https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent("Hi Alvari, I'd like to know more about your furniture")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
-            className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--color-ink)] px-5 py-3 text-center text-sm font-medium text-[var(--color-accent-light)]"
+          <button
+            onClick={() => {
+              window.open(`https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent("Hi Alvari, I'd like to know more about your furniture")}`, "_blank");
+              setOpen(false);
+            }}
+            className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--color-ink)] px-5 py-3 text-center text-sm font-medium text-[var(--color-bg)] cursor-pointer"
           >
             <MessageCircle className="h-4 w-4" strokeWidth={2} />
             Connect Us
-          </a>
+          </button>
         </div>
       )}
     </nav>

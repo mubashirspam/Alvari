@@ -111,6 +111,6 @@ Principles:
 ## Verify
 
 ```bash
-npm run typecheck
+pnpm typecheck
 # Manually: hit the page with and without UPSTASH_REDIS_REST_URL unset
 ```

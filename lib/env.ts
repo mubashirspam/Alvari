@@ -14,6 +14,9 @@ const envSchema = z.object({
   ADMIN_PASSWORD: z.string().min(8).optional(),
   NEON_AUTH_BASE_URL: z.string().url().optional(),
   NEON_AUTH_COOKIE_SECRET: z.string().min(32).optional(),
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  ANTHROPIC_MODEL: z.string().optional(),
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 export const env = envSchema.parse({
@@ -31,11 +34,32 @@ export const env = envSchema.parse({
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
   NEON_AUTH_BASE_URL: process.env.NEON_AUTH_BASE_URL,
   NEON_AUTH_COOKIE_SECRET: process.env.NEON_AUTH_COOKIE_SECRET,
+  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+  ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL,
+  CRON_SECRET: process.env.CRON_SECRET,
 });
 
 export const siteConfig = {
+  name: "Alvari Furniture",
+  legalName: "Alvari",
+  tagline: "Direct-from-Factory Furniture",
+  url: env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   whatsappNumber: env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919999999999",
   displayNumber: "+91 99999 99999",
   location: "Kalpetta, Wayanad — Kerala",
   hours: "Mon–Sat · 9am–8pm",
+  address: {
+    locality: "Kalpetta",
+    region: "Kerala",
+    country: "IN",
+    postalCode: "673121",
+  },
+  geo: { lat: 11.6088, lng: 76.0833 },
+  founders: ["Alvari"],
+  socials: {
+    instagram: "https://instagram.com/alvarifurniture",
+    facebook: "https://facebook.com/alvarifurniture",
+    youtube: "https://youtube.com/@alvarifurniture",
+  },
+  serviceArea: "Kerala",
 } as const;

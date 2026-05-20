@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alvari — Master Build Plan v2</title>
+<style>
+:root {
+  --bg: #0d0d0e;
+  --surface: #141416;
+  --surface2: #1a1a1d;
+  --border: #252528;
+  --border2: #2e2e33;
+  --ink: #e8e6e1;
+  --muted: #8a887f;
+  --dim: #5a5853;
+  --amber: #e8a838;
+  --amber-soft: #1f1a0f;
+  --amber-dim: #5c4218;
+  --green: #4ade80;
+  --green-soft: #0a1f12;
+  --green-dim: #1a4a2a;
+  --blue: #60a5fa;
+  --blue-soft: #0a1525;
+  --blue-dim: #1a3a5c;
+  --red: #f87171;
+  --red-soft: #1f0a0a;
+  --red-dim: #4a1a1a;
+  --purple: #a78bfa;
+  --purple-soft: #120f1f;
+  --purple-dim: #3d2f6e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1060px; margin: 0 auto; padding: 36px 20px 80px; }
+
+/* HERO */
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 36px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #e8a838, #f59e0b, #d97706);
+}
+.hero-tag {
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--amber); margin-bottom: 10px;
+}
+.hero h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(24px, 4vw, 38px);
+  font-weight: 700; line-height: 1.15;
+  color: #fff; margin-bottom: 10px;
+}
+.hero h1 span { color: var(--amber); }
+.hero p { color: var(--muted); font-size: 12px; margin-bottom: 20px; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill {
+  background: var(--surface2); border: 1px solid var(--border2);
+  padding: 3px 10px; border-radius: 999px; font-size: 10px; color: var(--muted);
+}
+.pill.g { border-color: var(--green-dim); color: var(--green); }
+.pill.a { border-color: var(--amber-dim); color: var(--amber); }
+
+/* ARCH NOTE */
+.arch-note {
+  background: var(--amber-soft); border: 1px solid var(--amber-dim);
+  border-radius: 10px; padding: 16px 20px; margin-bottom: 24px;
+  display: flex; gap: 12px;
+}
+.arch-note .icon { font-size: 18px; flex-shrink: 0; }
+.arch-note .body { font-size: 12px; color: #c4892a; }
+.arch-note .body strong { color: var(--amber); display: block; margin-bottom: 3px; font-size: 13px; }
+
+/* TOC */
+.toc {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-bottom: 24px;
+}
+.toc-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; }
+.toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 2px; }
+.toc-a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 8px; border-radius: 6px; text-decoration: none; transition: background 0.1s;
+}
+.toc-a:hover { background: var(--surface2); }
+.toc-n { font-size: 9px; color: var(--dim); min-width: 18px; text-align: right; }
+.toc-t { font-size: 11px; color: var(--muted); flex: 1; }
+.toc-b {
+  font-size: 9px; padding: 1px 6px; border-radius: 999px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; flex-shrink: 0;
+}
+.b-now { background: var(--green-soft); color: var(--green); border: 1px solid var(--green-dim); }
+.b-next { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber-dim); }
+.b-later { background: var(--purple-soft); color: var(--purple); border: 1px solid var(--purple-dim); }
+.b-infra { background: var(--blue-soft); color: var(--blue); border: 1px solid var(--blue-dim); }
+
+/* SECTION */
+.sec {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; margin-bottom: 16px; overflow: hidden;
+}
+.sec-head {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.sec-num {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+  padding: 2px 8px; border-radius: 5px; flex-shrink: 0;
+}
+.n-now { background: var(--green-soft); border: 1px solid var(--green-dim); color: var(--green); }
+.n-next { background: var(--amber-soft); border: 1px solid var(--amber-dim); color: var(--amber); }
+.n-later { background: var(--purple-soft); border: 1px solid var(--purple-dim); color: var(--purple); }
+.n-infra { background: var(--blue-soft); border: 1px solid var(--blue-dim); color: var(--blue); }
+.n-rule { background: var(--red-soft); border: 1px solid var(--red-dim); color: var(--red); }
+.sec-head h2 {
+  font-family: Georgia, serif; font-size: 16px; font-weight: 700; color: #fff; flex: 1;
+}
+.sec-desc { font-size: 11px; color: var(--dim); margin-left: auto; }
+.sec-body { padding: 20px; }
+
+/* HEADINGS in body */
+h3 {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--dim); margin: 20px 0 10px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+h3:first-child { margin-top: 0; }
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { background: var(--surface2); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--muted); }
+td { color: var(--ink); }
+tbody tr:hover { background: var(--surface2); }
+code {
+  background: var(--bg); padding: 1px 5px; border-radius: 3px;
+  font-size: 11px; color: var(--amber); border: 1px solid var(--border2);
+}
+strong { color: #fff; }
+
+/* CODEBLOCK */
+.cb {
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 14px 16px; margin: 10px 0;
+  font-size: 11.5px; color: #a09880; line-height: 1.65;
+  overflow-x: auto; white-space: pre;
+}
+.cb .hl { color: var(--amber); }
+.cb .g { color: var(--green); }
+.cb .b { color: var(--blue); }
+.cb .p { color: var(--purple); }
+
+/* CALLOUT */
+.callout {
+  border-radius: 8px; padding: 12px 16px; margin: 10px 0;
+  font-size: 12px; display: flex; gap: 10px;
+}
+.callout .ci { flex-shrink: 0; }
+.callout .ct strong { display: block; margin-bottom: 2px; }
+.c-info { background: var(--blue-soft); border: 1px solid var(--blue-dim); color: #90c4fa; }
+.c-warn { background: var(--amber-soft); border: 1px solid var(--amber-dim); color: #c4892a; }
+.c-ok { background: var(--green-soft); border: 1px solid var(--green-dim); color: #4ade80; }
+.c-danger { background: var(--red-soft); border: 1px solid var(--red-dim); color: #f87171; }
+
+/* GRID */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+@media(max-width:640px) { .grid2 { grid-template-columns: 1fr; } }
+.tile {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 14px;
+}
+.tile h4 { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+.tile p { font-size: 11px; color: var(--muted); line-height: 1.6; }
+.tile ul { list-style: none; padding: 0; margin-top: 6px; }
+.tile ul li { font-size: 11px; color: var(--muted); padding: 2px 0 2px 12px; position: relative; border-bottom: 1px solid var(--border); }
+.tile ul li:last-child { border-bottom: none; }
+.tile ul li::before { content: '→'; position: absolute; left: 0; color: var(--dim); }
+
+/* PHASES */
+.phases { display: flex; flex-direction: column; }
+.phase { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.phase:last-child { border-bottom: none; }
+.pw { font-size: 10px; padding-top: 2px; }
+.pw .wl { text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 2px; }
+.pw .wt { color: var(--dim); }
+.pw.now .wl { color: var(--green); }
+.pw.next .wl { color: var(--amber); }
+.pw.later .wl { color: var(--purple); }
+.pw.infra .wl { color: var(--blue); }
+.phase h4 { font-family: Georgia, serif; font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.phase p { font-size: 11px; color: var(--muted); }
+.phase ul { list-style: none; padding: 0; margin-top: 6px; }
+.phase ul li { font-size: 11px; color: var(--muted); padding: 2px 0 2px 12px; position: relative; }
+.phase ul li::before { content: '·'; position: absolute; left: 0; color: var(--dim); }
+@media(max-width:540px) { .phase { grid-template-columns: 1fr; gap: 4px; } }
+
+/* CHIPS */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.chip { background: var(--surface2); border: 1px solid var(--border2); padding: 3px 10px; border-radius: 6px; font-size: 11px; color: var(--muted); }
+.chip.core { border-color: var(--amber-dim); color: var(--amber); }
+.chip.add { border-color: var(--green-dim); color: var(--green); }
+.chip.fut { border-color: var(--purple-dim); color: var(--purple); }
+
+/* NEVER LIST */
+.nlist { list-style: none; padding: 0; }
+.nlist li { padding: 10px 12px 10px 36px; position: relative; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.nlist li:last-child { border-bottom: none; }
+.nlist li::before { content: '✗'; position: absolute; left: 12px; color: var(--red); font-weight: 700; font-size: 13px; }
+.nlist li strong { color: var(--red); }
+
+footer { text-align: center; color: var(--dim); font-size: 10px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="hero-tag">Master Build Plan · v2 Corrected · Module-Based</div>
+  <h1>Alvari — <span>One Backend. Every Surface.</span></h1>
+  <p>Direct-from-factory furniture · Wayanad, Kerala · Stack: Next.js API + Neon + Upstash + ImageKit + Vercel<br>
+  Clients: Next.js Web · Admin Panel (Web) · Flutter App (iOS + Android)</p>
+  <div class="pills">
+    <span class="pill g">Owner: marketingnizamudheen@gmail.com</span>
+    <span class="pill a">Build Order: Web → Admin → Automation → Flutter</span>
+    <span class="pill">Updated: May 2026</span>
+    <span class="pill">v2 — Corrected &amp; Module-Based</span>
+  </div>
+</header>
+
+<div class="arch-note">
+  <div class="icon">⚡</div>
+  <div class="body">
+    <strong>THE SINGLE NON-NEGOTIABLE RULE</strong>
+    One backend (Next.js API routes). One database (Neon Postgres). One admin panel (Web /admin). Two frontends: Web (Next.js pages) + Flutter app. Every feature ships as an API endpoint first. Admin and app are clients of that API. This never changes.
+  </div>
+</div>
+
+<nav class="toc">
+  <div class="toc-label">Module Index — Contents</div>
+  <div class="toc-grid">
+    <a href="#arch" class="toc-a"><span class="toc-n">00</span><span class="toc-t">System Architecture Overview</span><span class="toc-b b-infra">INFRA</span></a>
+    <a href="#db" class="toc-a"><span class="toc-n">01</span><span class="toc-t">Database Schema — All Tables</span><span class="toc-b b-infra">INFRA</span></a>
+    <a href="#auth" class="toc-a"><span class="toc-n">02</span><span class="toc-t">Auth Module (WA OTP + JWT)</span><span class="toc-b b-now">NOW</span></a>
+    <a href="#products" class="toc-a"><span class="toc-n">03</span><span class="toc-t">Product Catalogue Module</span><span class="toc-b b-now">NOW</span></a>
+    <a href="#leads" class="toc-a"><span class="toc-n">04</span><span class="toc-t">Lead Capture Module</span><span class="toc-b b-now">NOW</span></a>
+    <a href="#wa" class="toc-a"><span class="toc-n">05</span><span class="toc-t">WhatsApp Cloud API Module</span><span class="toc-b b-now">NOW</span></a>
+    <a href="#admin" class="toc-a"><span class="toc-n">06</span><span class="toc-t">Admin Panel Module</span><span class="toc-b b-now">NOW</span></a>
+    <a href="#seo" class="toc-a"><span class="toc-n">07</span><span class="toc-t">SEO + Programmatic Pages</span><span class="toc-b b-now">NOW</span></a>
+    <a href="#ai-content" class="toc-a"><span class="toc-n">08</span><span class="toc-t">AI Content Engine Module</span><span class="toc-b b-next">NEXT</span></a>
+    <a href="#ai-chat" class="toc-a"><span class="toc-n">09</span><span class="toc-t">AI Chat + Lead Scoring</span><span class="toc-b b-next">NEXT</span></a>
+    <a href="#orders" class="toc-a"><span class="toc-n">10</span><span class="toc-t">Orders + Payments (Razorpay)</span><span class="toc-b b-next">NEXT</span></a>
+    <a href="#referral" class="toc-a"><span class="toc-n">11</span><span class="toc-t">Referral + Coupons Module</span><span class="toc-b b-next">NEXT</span></a>
+    <a href="#automation" class="toc-a"><span class="toc-n">12</span><span class="toc-t">Automation Engine Module</span><span class="toc-b b-next">NEXT</span></a>
+    <a href="#flutter" class="toc-a"><span class="toc-n">13</span><span class="toc-t">Flutter App — Phase Plan</span><span class="toc-b b-later">LATER</span></a>
+    <a href="#ar-3d" class="toc-a"><span class="toc-n">14</span><span class="toc-t">3D + AR Placement Module</span><span class="toc-b b-later">LATER</span></a>
+    <a href="#ai-vr" class="toc-a"><span class="toc-n">15</span><span class="toc-t">AI Interior Render Module</span><span class="toc-b b-later">LATER</span></a>
+    <a href="#scale" class="toc-a"><span class="toc-n">16</span><span class="toc-t">Scaling Strategy + Swap Points</span><span class="toc-b b-infra">INFRA</span></a>
+    <a href="#roadmap" class="toc-a"><span class="toc-n">17</span><span class="toc-t">Master Roadmap — Ordered Build</span><span class="toc-b b-infra">INFRA</span></a>
+    <a href="#never" class="toc-a"><span class="toc-n">—</span><span class="toc-t">The NEVER List</span><span class="toc-b" style="background:var(--red-soft);color:var(--red);border:1px solid var(--red-dim);">RULES</span></a>
+  </div>
+</nav>
+
+<!-- MODULE 00: ARCH -->
+<section class="sec" id="arch">
+  <div class="sec-head">
+    <span class="sec-num n-infra">MODULE 00</span>
+    <h2>System Architecture Overview</h2>
+    <span class="sec-desc">Complete map before any code</span>
+  </div>
+  <div class="sec-body">
+    <h3>The Shape — One Backend, Many Frontends</h3>
+    <div class="cb"><span class="hl">                    ┌── Web (Next.js pages · alvari.com)</span>
+<span class="g">                    ├── Admin Panel (Next.js /admin · web only, never Flutter)</span>
+<span class="b">   ONE BACKEND ──────┼── Flutter App (iOS + Android)</span>
+   (Next.js API)     ├── WhatsApp Bot (server-to-server via webhook)
+<span class="hl">                    ├── AI Content Engine (Vercel Cron jobs)</span>
+                    └── Future: Kiosk · Partner API · Marketplace Sync
+
+Backend integrations:
+  <span class="hl">Neon Postgres</span>       system of record — all data lives here
+  <span class="g">Upstash Redis</span>       cache · sessions · rate limits · job queue
+  <span class="b">ImageKit</span>            all media storage + CDN transforms
+  <span class="hl">Anthropic API</span>       AI chat bot · content gen · lead scoring
+  <span class="g">Meta WA Cloud API</span>   WhatsApp messaging (OTP + templates + bot)
+  <span class="b">Razorpay</span>            payments · UPI · cards · EMI
+  Resend              transactional email
+  <span class="p">GPU Microservice</span>    AI VR renders — Phase 3 Flutter only (Python/Modal)</div>
+
+    <h3>Current Stack (already have)</h3>
+    <div class="chips">
+      <span class="chip core">Next.js 16</span>
+      <span class="chip core">Neon Postgres</span>
+      <span class="chip core">Upstash Redis</span>
+      <span class="chip core">ImageKit</span>
+      <span class="chip core">Vercel</span>
+      <span class="chip core">Drizzle ORM</span>
+    </div>
+
+    <h3>Add in Phase 0–1 (Web + Admin)</h3>
+    <div class="chips">
+      <span class="chip add">WhatsApp Cloud API</span>
+      <span class="chip add">Razorpay</span>
+      <span class="chip add">Resend</span>
+      <span class="chip add">Meta Pixel + CAPI</span>
+      <span class="chip add">PostHog</span>
+      <span class="chip add">Sentry</span>
+      <span class="chip add">Vercel Cron</span>
+      <span class="chip add">OpenAPI → Dart SDK</span>
+    </div>
+
+    <h3>Add in Phase 2+ (Flutter + Advanced)</h3>
+    <div class="chips">
+      <span class="chip fut">Flutter (Riverpod · Dio · go_router)</span>
+      <span class="chip fut">Firebase FCM</span>
+      <span class="chip fut">ARKit / ARCore</span>
+      <span class="chip fut">Upstash QStash (async jobs)</span>
+      <span class="chip fut">Typesense (at 5K+ SKUs)</span>
+      <span class="chip fut">GPU Microservice (Python / Modal)</span>
+    </div>
+
+    <div class="callout c-info">
+      <span class="ci">ℹ</span>
+      <div class="ct"><strong>API-First Rule</strong>Every feature is an API endpoint first. Admin consumes it. Flutter consumes it. Never build UI without the API existing. Version all routes: <code>/api/v1/...</code></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 01: DB -->
+<section class="sec" id="db">
+  <div class="sec-head">
+    <span class="sec-num n-infra">MODULE 01</span>
+    <h2>Database Schema — Complete Table Map</h2>
+    <span class="sec-desc">Neon Postgres · Drizzle ORM · Money = integer paise always</span>
+  </div>
+  <div class="sec-body">
+    <h3>Phase 0–1 Tables (Web + Admin Launch)</h3>
+    <table>
+      <thead><tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr></thead>
+      <tbody>
+        <tr><td><code>users</code></td><td>All users (customers + admins)</td><td>id, phone, name, email?, role, opted_in_whatsapp, created_at</td></tr>
+        <tr><td><code>products</code></td><td>Product catalogue</td><td>id, slug, name, description_ml, category, price_paise, stock, images[], glb_url?, is_active</td></tr>
+        <tr><td><code>product_variants</code></td><td>Size / colour / material combos</td><td>id, product_id, label, price_paise, stock_delta</td></tr>
+        <tr><td><code>leads</code></td><td>Every inquiry / CTA click</td><td>id, user_id?, phone, product_id?, source, stage, score, assigned_to, created_at</td></tr>
+        <tr><td><code>wa_messages</code></td><td>WA conversation log</td><td>id, lead_id, direction (in/out), template_id?, body, status, sent_at</td></tr>
+        <tr><td><code>wa_templates</code></td><td>Approved WA message templates</td><td>id, name, category, body_vars[], status (approved/pending), meta_id</td></tr>
+        <tr><td><code>seo_pages</code></td><td>Programmatic SEO page data</td><td>id, slug, city, category, content, schema_json, published_at</td></tr>
+        <tr><td><code>admin_sessions</code></td><td>Admin login sessions</td><td>id, user_id, token_hash, expires_at, ip</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Phase 1–2 Tables (Orders + Automation)</h3>
+    <table>
+      <thead><tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr></thead>
+      <tbody>
+        <tr><td><code>orders</code></td><td>Confirmed orders</td><td>id, user_id, total_paise, status, delivery_address, razorpay_order_id, created_at</td></tr>
+        <tr><td><code>order_items</code></td><td>Line items per order</td><td>id, order_id, product_id, variant_id?, qty, price_paise</td></tr>
+        <tr><td><code>payments</code></td><td>Payment records</td><td>id, order_id, razorpay_payment_id, amount_paise, status, method, created_at</td></tr>
+        <tr><td><code>referrals</code></td><td>Referral tracking + credit</td><td>id, referrer_id, referee_id, order_id?, credit_paise, status</td></tr>
+        <tr><td><code>coupons</code></td><td>Discount codes</td><td>id, code, type (pct/fixed), value, max_uses, used_count, expires_at</td></tr>
+        <tr><td><code>email_sequences</code></td><td>Drip email jobs</td><td>id, lead_id, sequence_name, step, scheduled_at, sent_at</td></tr>
+        <tr><td><code>broadcast_jobs</code></td><td>Bulk WA broadcast tracking</td><td>id, template_id, segment_filter, status, scheduled_at, sent_count</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Phase 3 Tables (Flutter + AI / AR)</h3>
+    <table>
+      <thead><tr><th>Table</th><th>Purpose</th><th>Key Columns</th></tr></thead>
+      <tbody>
+        <tr><td><code>saved_rooms</code></td><td>User's AI-rendered room designs</td><td>id, user_id, room_image_url, renders[] (url + product_ids), style, created_at</td></tr>
+        <tr><td><code>render_jobs</code></td><td>GPU render queue status</td><td>id, user_id, status, room_image_url, style, result_urls[], cost_paise, created_at</td></tr>
+        <tr><td><code>wishlists</code></td><td>Saved products (Flutter)</td><td>id, user_id, product_id, created_at</td></tr>
+        <tr><td><code>push_tokens</code></td><td>FCM device tokens</td><td>id, user_id, token, platform (ios/android), updated_at</td></tr>
+        <tr><td><code>community_posts</code></td><td>Customer room photos (social feed)</td><td>id, user_id, image_url, caption, product_tags[], likes_count, created_at</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout c-warn">
+      <span class="ci">⚠</span>
+      <div class="ct"><strong>Money Rule — Non-Negotiable</strong>All monetary values stored as integer paise (₹1 = 100 paise). Never float. <code>price_paise INT NOT NULL</code>. Zero rounding bugs at scale.</div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 02: AUTH -->
+<section class="sec" id="auth">
+  <div class="sec-head">
+    <span class="sec-num n-now">MODULE 02</span>
+    <h2>Auth Module — WhatsApp OTP + JWT</h2>
+    <span class="sec-desc">Phase 0 · Build Week 1 · One auth for all clients</span>
+  </div>
+  <div class="sec-body">
+    <h3>Flow</h3>
+    <div class="cb">User enters phone  →  POST /api/v1/auth/send-otp
+Backend  →  WA Cloud API sends 6-digit OTP (template: "otp_verification")
+User enters OTP  →  POST /api/v1/auth/verify-otp
+Backend validates  →  creates/updates users row  →  issues JWT
+
+JWT payload: { sub: userId, role: "customer"|"admin", phone, iat, exp: 7d }
+Web storage  : httpOnly cookie (never accessible from JS)
+Flutter storage: flutter_secure_storage (never SharedPreferences for JWT)</div>
+
+    <h3>API Endpoints</h3>
+    <table>
+      <thead><tr><th>Endpoint</th><th>Auth</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST /api/v1/auth/send-otp</code></td><td>Public</td><td>Sends OTP to phone via WA Cloud API</td></tr>
+        <tr><td><code>POST /api/v1/auth/verify-otp</code></td><td>Public</td><td>Validates OTP → issues JWT + creates user row</td></tr>
+        <tr><td><code>POST /api/v1/auth/refresh</code></td><td>JWT (near-expired)</td><td>Silent token refresh</td></tr>
+        <tr><td><code>POST /api/v1/auth/logout</code></td><td>JWT</td><td>Invalidates session / clears cookie</td></tr>
+        <tr><td><code>GET /api/v1/auth/me</code></td><td>JWT</td><td>Returns current user profile</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout c-ok">
+      <span class="ci">✓</span>
+      <div class="ct"><strong>One Auth For All Clients</strong>Same JWT works for web (cookie), Flutter (Bearer header), admin panel. No separate auth system. <code>lib/auth/neon-auth.ts</code> is the single source of truth. Admin check: <code>role === "admin"</code> in middleware.</div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 03: PRODUCTS -->
+<section class="sec" id="products">
+  <div class="sec-head">
+    <span class="sec-num n-now">MODULE 03</span>
+    <h2>Product Catalogue Module</h2>
+    <span class="sec-desc">Phase 0 · Core data layer · ISR + Redis cached</span>
+  </div>
+  <div class="sec-body">
+    <h3>API Endpoints</h3>
+    <table>
+      <thead><tr><th>Endpoint</th><th>Auth</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>GET /api/v1/products</code></td><td>Public</td><td>List with filters (category, price_range). Redis cached 60s. ISR.</td></tr>
+        <tr><td><code>GET /api/v1/products/:slug</code></td><td>Public</td><td>Single product detail. ISR cached 300s.</td></tr>
+        <tr><td><code>POST /api/v1/products</code></td><td>Admin JWT</td><td>Create product. Images uploaded to ImageKit.</td></tr>
+        <tr><td><code>PATCH /api/v1/products/:id</code></td><td>Admin JWT</td><td>Update fields + stock. Busts cache: <code>products:*</code>.</td></tr>
+        <tr><td><code>DELETE /api/v1/products/:id</code></td><td>Admin JWT</td><td>Soft delete: <code>is_active = false</code></td></tr>
+        <tr><td><code>GET /api/v1/categories</code></td><td>Public</td><td>Category list with counts. Cached 600s.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="grid2">
+      <div class="tile">
+        <h4>Caching Strategy</h4>
+        <ul>
+          <li>Product list: Upstash Redis 60s TTL</li>
+          <li>Product detail: Next.js ISR 300s</li>
+          <li>Admin write busts cache via key pattern</li>
+          <li>Images: ImageKit CDN with transform URLs</li>
+        </ul>
+      </div>
+      <div class="tile">
+        <h4>Search Strategy</h4>
+        <ul>
+          <li>Phase 0: Postgres full-text search (ts_vector)</li>
+          <li>Phase 2+: Typesense at 5K+ active SKUs</li>
+          <li>API contract unchanged — same endpoint</li>
+          <li>Flutter uses same <code>/api/v1/products</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 04: LEADS -->
+<section class="sec" id="leads">
+  <div class="sec-head">
+    <span class="sec-num n-now">MODULE 04</span>
+    <h2>Lead Capture Module</h2>
+    <span class="sec-desc">Phase 0 · The revenue engine · 3 capture points on web</span>
+  </div>
+  <div class="sec-body">
+    <h3>Lead Sources</h3>
+    <table>
+      <thead><tr><th>Trigger</th><th>Offer</th><th>API Call</th></tr></thead>
+      <tbody>
+        <tr><td>"Get catalog on WhatsApp" sticky CTA</td><td>PDF catalog + price list sent to WA</td><td><code>POST /api/v1/leads</code> source: "catalog_cta"</td></tr>
+        <tr><td>Product page "Get price + delivery quote"</td><td>Personalised quote DM in 60s</td><td><code>POST /api/v1/leads</code> source: "product_cta" + product_id</td></tr>
+        <tr><td>Exit-intent modal (~25% of exits)</td><td>₹2,000 off first order coupon</td><td><code>POST /api/v1/leads</code> source: "exit_intent"</td></tr>
+        <tr><td>WhatsApp incoming message</td><td>Bot handles, lead created automatically</td><td>WA webhook → auto creates lead row</td></tr>
+        <tr><td>Flutter app CTA / wishlist</td><td>Same as web</td><td>Same <code>/api/v1/leads</code> endpoint</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Lead Lifecycle</h3>
+    <div class="cb">new → contacted → replied → qualified → quoted → won / lost
+
+Score 0–100:  cold (&lt;40) · warm (40–70) · hot (&gt;70)
+AI scores on each incoming WA message. Hot lead triggers admin notification.</div>
+
+    <div class="callout c-warn">
+      <span class="ci">⚠</span>
+      <div class="ct"><strong>WhatsApp Compliance First</strong>Never send WA messages without explicit opt-in. <code>opted_in_whatsapp = true</code> on the user row is the gate. Template messages only outside 24h window. Meta bans numbers, not just accounts.</div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 05: WHATSAPP -->
+<section class="sec" id="wa">
+  <div class="sec-head">
+    <span class="sec-num n-now">MODULE 05</span>
+    <h2>WhatsApp Cloud API Module</h2>
+    <span class="sec-desc">Phase 0 · Primary conversion channel · Free up to 1K conversations/month</span>
+  </div>
+  <div class="sec-body">
+    <h3>File Structure</h3>
+    <div class="cb">lib/whatsapp/
+  client.ts          ← sendTemplate(), sendText(), sendImage(), sendInteractive()
+  templates.ts       ← Template definitions (body, variables, category)
+  webhook.ts         ← Incoming message handler → dispatches to AI bot or human
+  rate-limiter.ts    ← Per-user rate limit via Upstash (prevent spam)
+
+app/api/v1/wa/
+  webhook/route.ts   ← POST (Meta sends all events here — verify HMAC)
+  send/route.ts      ← POST (admin-triggered sends, rate-limited)</div>
+
+    <h3>Templates to Create First</h3>
+    <table>
+      <thead><tr><th>Template Name</th><th>Category</th><th>When Sent</th></tr></thead>
+      <tbody>
+        <tr><td><code>otp_verification</code></td><td>Utility</td><td>Login OTP</td></tr>
+        <tr><td><code>catalog_welcome</code></td><td>Marketing</td><td>Catalog CTA clicked</td></tr>
+        <tr><td><code>product_quote</code></td><td>Marketing</td><td>Product CTA — includes image, price, delivery info</td></tr>
+        <tr><td><code>order_confirmation</code></td><td>Utility</td><td>Order placed successfully</td></tr>
+        <tr><td><code>delivery_update</code></td><td>Utility</td><td>Shipment status change</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- MODULE 06: ADMIN -->
+<section class="sec" id="admin">
+  <div class="sec-head">
+    <span class="sec-num n-now">MODULE 06</span>
+    <h2>Admin Panel Module</h2>
+    <span class="sec-desc">Phase 0 · Web only · /admin route · Never in Flutter</span>
+  </div>
+  <div class="sec-body">
+    <div class="phases">
+      <div class="phase">
+        <div class="pw now"><div class="wl">Week 1–2</div><div class="wt">Build first</div></div>
+        <div>
+          <h4>Lead Inbox (highest-priority screen)</h4>
+          <ul>
+            <li>View all leads, pipeline (Kanban or table)</li>
+            <li>Send WA reply directly from admin</li>
+            <li>Tag lead hot/warm/cold, assign to self</li>
+            <li>One-click "Send quote template" per product</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw now"><div class="wl">Week 2–3</div><div class="wt">Core ops</div></div>
+        <div>
+          <h4>Product Manager</h4>
+          <ul>
+            <li>Add / edit / delete products</li>
+            <li>Upload images (direct to ImageKit)</li>
+            <li>Set stock, price (paise), category, ML description</li>
+            <li>Toggle active/inactive, bulk import CSV</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw next"><div class="wl">Week 4–5</div><div class="wt">After orders live</div></div>
+        <div>
+          <h4>Orders Dashboard</h4>
+          <ul>
+            <li>All orders, status management, payment records</li>
+            <li>Revenue chart (daily / weekly / monthly)</li>
+            <li>Refund trigger, export to CSV</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw next"><div class="wl">Week 5–6</div><div class="wt">Growth tools</div></div>
+        <div>
+          <h4>Broadcast + Automation Control</h4>
+          <ul>
+            <li>Schedule WA broadcasts to segmented lead lists</li>
+            <li>AI content review queue (approve before publish)</li>
+            <li>Coupon code generator, drip sequence config</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw later"><div class="wl">Phase 2</div><div class="wt">Scale</div></div>
+        <div>
+          <h4>Analytics Dashboard</h4>
+          <p>PostHog events: conversion funnel, lead source breakdown, top products by revenue, Meta Pixel CAPI match rates, WA template performance.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout c-danger">
+      <span class="ci">✗</span>
+      <div class="ct"><strong>Admin stays web-only at /admin.</strong> Admin actions go through the same API service layer the Flutter app uses. No direct DB queries in admin routes. No shortcut. Admin role = "admin" in JWT, checked per route via middleware.</div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 07: SEO -->
+<section class="sec" id="seo">
+  <div class="sec-head">
+    <span class="sec-num n-now">MODULE 07</span>
+    <h2>SEO + Programmatic Pages Module</h2>
+    <span class="sec-desc">Phase 0–1 · 84 pages · Compounds forever</span>
+  </div>
+  <div class="sec-body">
+    <h3>Programmatic SEO (6 categories × 14 Kerala cities = 84 pages)</h3>
+    <table>
+      <thead><tr><th>URL Pattern</th><th>Content</th><th>Schema Markup</th></tr></thead>
+      <tbody>
+        <tr><td><code>/furniture/teak-dining-table-kochi</code></td><td>AI-written 400w (local context, materials, delivery). 3–6 matching products from DB.</td><td>Product, LocalBusiness, FAQPage, BreadcrumbList</td></tr>
+        <tr><td><code>/furniture/wardrobe-calicut</code></td><td>City-specific delivery info, Wayanad origin story</td><td>Product, LocalBusiness</td></tr>
+        <tr><td><code>/furniture/sofa-set-thrissur</code></td><td>Monsoon care tips for Kerala homes, FAQ</td><td>FAQPage, LocalBusiness</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Technical SEO Checklist (Ship Week 2)</h3>
+    <div class="grid2">
+      <div class="tile">
+        <h4>Must-Ship Week 2</h4>
+        <ul>
+          <li><code>app/sitemap.ts</code> — dynamic, all products + SEO pages</li>
+          <li><code>app/robots.ts</code></li>
+          <li>OG images via <code>@vercel/og</code> per product</li>
+          <li>Core Web Vitals green (ISR + ImageKit CDN)</li>
+        </ul>
+      </div>
+      <div class="tile">
+        <h4>JSON-LD Schema</h4>
+        <ul>
+          <li><code>Product</code> on all product pages</li>
+          <li><code>LocalBusiness</code> with Wayanad address</li>
+          <li><code>BreadcrumbList</code> on category pages</li>
+          <li><code>FAQPage</code> on SEO landing pages</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 08: AI CONTENT -->
+<section class="sec" id="ai-content">
+  <div class="sec-head">
+    <span class="sec-num n-next">MODULE 08</span>
+    <h2>AI Content Engine Module</h2>
+    <span class="sec-desc">Phase 1 · Vercel Cron + Anthropic API · Admin approves before publish</span>
+  </div>
+  <div class="sec-body">
+    <h3>Content Jobs (Vercel Cron)</h3>
+    <table>
+      <thead><tr><th>Job</th><th>Schedule</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td>Blog post generator</td><td>3× per week</td><td>Drafts saved to DB. Admin approves before publish.</td></tr>
+        <tr><td>Product description writer</td><td>On new product save (hook)</td><td>EN + Malayalam description, meta title, SEO alt text</td></tr>
+        <tr><td>SEO page refresher</td><td>Monthly</td><td>Updates all 84 programmatic pages with fresh content</td></tr>
+        <tr><td>Ad creative variants</td><td>Weekly</td><td>10 ad copy variants from top products → admin reviews</td></tr>
+        <tr><td>Lead score updater</td><td>On every WA message received</td><td>Scores lead 0–100, updates stage at thresholds</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout c-ok">
+      <span class="ci">✓</span>
+      <div class="ct"><strong>Cost:</strong> Claude Haiku for bulk content (descriptions, scoring ~₹0.01/call). Claude Sonnet for blog posts, ad copy. Estimated ~₹200–500/month total at early volume.</div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 09: AI CHAT -->
+<section class="sec" id="ai-chat">
+  <div class="sec-head">
+    <span class="sec-num n-next">MODULE 09</span>
+    <h2>AI Chat + Lead Scoring Module</h2>
+    <span class="sec-desc">Phase 1 · Site widget + WhatsApp bot · Claude Haiku</span>
+  </div>
+  <div class="sec-body">
+    <div class="grid2">
+      <div class="tile">
+        <h4>Site Chat Widget</h4>
+        <p>Claude Haiku with product DB context. Answers questions, qualifies intent, captures phone, hands off to human with summary when needed.</p>
+        <ul>
+          <li>Context: product list + current page + FAQ</li>
+          <li>Actions: capture lead, send WA, book video call</li>
+          <li>Fallback: "I'll connect you on WhatsApp"</li>
+          <li>Escalation when confidence low</li>
+        </ul>
+      </div>
+      <div class="tile">
+        <h4>WhatsApp Bot</h4>
+        <p>Same Claude Haiku, triggered via WA webhook. Handles product questions, quotes, video call booking. Human takes over on "needs_human" flag.</p>
+        <ul>
+          <li>Context: conversation history from wa_messages</li>
+          <li>Actions: send template replies, update lead stage</li>
+          <li>Escalation: WA ping to owner number</li>
+          <li>24h free-form window after user initiates</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Lead Scoring Prompt Logic</h3>
+    <div class="cb">On each WA message or chat event:
+  → Claude Haiku: "Score this lead 0–100 based on intent signals"
+  → Signals: product questions (+10) · price asks (+15) · delivery asks (+20)
+             "my room" / "measurements" (+25) · "can I visit" (+30)
+  → Score stored on leads.score, stage auto-updated
+  → Hot lead (&gt;70) → admin WA notification immediately</div>
+  </div>
+</section>
+
+<!-- MODULE 10: ORDERS -->
+<section class="sec" id="orders">
+  <div class="sec-head">
+    <span class="sec-num n-next">MODULE 10</span>
+    <h2>Orders + Payments Module</h2>
+    <span class="sec-desc">Phase 1 · Razorpay · Webhook HMAC verified · Paise always</span>
+  </div>
+  <div class="sec-body">
+    <h3>Payment Flow</h3>
+    <div class="cb">User confirms order
+→ POST /api/v1/orders          (creates order row, status: pending)
+→ POST /api/v1/payments/create (creates Razorpay order, returns razorpay_order_id)
+→ Frontend loads Razorpay checkout
+     Web: Razorpay.js · Flutter: razorpay_flutter SDK
+→ Payment success
+→ Razorpay fires webhook → POST /api/v1/payments/webhook
+→ Backend: verify HMAC-SHA256 signature FIRST
+→ Update payment status → update order status: confirmed
+→ WA template "order_confirmation" sent to customer
+→ Admin notified via WA</div>
+
+    <h3>API Endpoints</h3>
+    <table>
+      <thead><tr><th>Endpoint</th><th>Auth</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST /api/v1/orders</code></td><td>JWT</td><td>Create order from cart</td></tr>
+        <tr><td><code>GET /api/v1/orders</code></td><td>JWT (admin: all · user: own)</td><td>List orders</td></tr>
+        <tr><td><code>GET /api/v1/orders/:id</code></td><td>JWT (owner or admin)</td><td>Order detail</td></tr>
+        <tr><td><code>POST /api/v1/payments/create</code></td><td>JWT</td><td>Creates Razorpay order</td></tr>
+        <tr><td><code>POST /api/v1/payments/webhook</code></td><td>HMAC signature (no JWT)</td><td>Razorpay confirms payment</td></tr>
+        <tr><td><code>POST /api/v1/orders/:id/cancel</code></td><td>Admin JWT</td><td>Cancel order + trigger refund</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout c-warn">
+      <span class="ci">⚠</span>
+      <div class="ct"><strong>Webhook Security:</strong> Verify Razorpay HMAC-SHA256 signature before updating any order. Never trust the payload without verification. Handle retries idempotently using <code>razorpay_payment_id</code> as the dedup key.</div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 11: REFERRAL -->
+<section class="sec" id="referral">
+  <div class="sec-head">
+    <span class="sec-num n-next">MODULE 11</span>
+    <h2>Referral + Coupons Module</h2>
+    <span class="sec-desc">Phase 1 · Organic growth flywheel · Furniture buyers refer family</span>
+  </div>
+  <div class="sec-body">
+    <div class="grid2">
+      <div class="tile">
+        <h4>Referral System</h4>
+        <p>Every user gets a unique code. Share via WA/IG. Referee places first order → referrer gets ₹2,000 store credit.</p>
+        <ul>
+          <li>Link: <code>alvari.com?ref=NIZM4</code></li>
+          <li>Attribution stored on user creation</li>
+          <li>Credit unlocks after referee order confirmed</li>
+          <li>Credit redeemable at checkout (deducts from total)</li>
+        </ul>
+      </div>
+      <div class="tile">
+        <h4>Coupon Engine</h4>
+        <p>Admin creates coupons in admin panel. Flat or % discount. Max uses, expiry, minimum order value.</p>
+        <ul>
+          <li>Validate: not expired, uses_left &gt; 0, min order met</li>
+          <li>Lock usage atomically with Upstash Redis</li>
+          <li>Exit-intent coupon auto-generated per session</li>
+          <li>Applied at checkout before Razorpay order creation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 12: AUTOMATION -->
+<section class="sec" id="automation">
+  <div class="sec-head">
+    <span class="sec-num n-next">MODULE 12</span>
+    <h2>Automation Engine Module</h2>
+    <span class="sec-desc">Phase 2 · Cron jobs + queue + drip sequences</span>
+  </div>
+  <div class="sec-body">
+    <h3>Automated Workflows</h3>
+    <table>
+      <thead><tr><th>Workflow</th><th>Trigger</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Lead nurture drip</strong></td><td>New lead created</td><td>Day 0: WA template → Day 3: follow-up → Day 7: email → Day 14: "still interested?" WA</td></tr>
+        <tr><td><strong>Cart abandonment</strong></td><td>Product viewed, no order in 2h</td><td>WA reminder with product image + "Still looking for this?"</td></tr>
+        <tr><td><strong>Delivery update</strong></td><td>Order status change</td><td>WA template "delivery_update" with tracking link</td></tr>
+        <tr><td><strong>Review request</strong></td><td>7 days after delivery</td><td>WA with Google review link + community post photo prompt</td></tr>
+        <tr><td><strong>Price drop alert</strong></td><td>Product price reduced</td><td>WA to users who wishlisted that product (web + Flutter)</td></tr>
+        <tr><td><strong>Weekly broadcast</strong></td><td>Monday 10am Vercel Cron</td><td>Admin-approved WA to warm leads (max 256 per list)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout c-info">
+      <span class="ci">ℹ</span>
+      <div class="ct"><strong>Queue Strategy:</strong> Vercel Cron for timed jobs (runs under 60s). Upstash QStash for async jobs (bulk WA send, GPU renders). Upgrade to self-hosted BullMQ on Railway at &gt;100 async jobs/day.</div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 13: FLUTTER -->
+<section class="sec" id="flutter">
+  <div class="sec-head">
+    <span class="sec-num n-later">MODULE 13</span>
+    <h2>Flutter Mobile App — Phase Plan</h2>
+    <span class="sec-desc">Starts after Web + Admin stable · Same backend · iOS + Android</span>
+  </div>
+  <div class="sec-body">
+    <div class="callout c-ok">
+      <span class="ci">✓</span>
+      <div class="ct"><strong>Flutter Phase 1 needs zero new backend work.</strong> It consumes existing <code>/api/v1/products</code>, <code>/api/v1/leads</code>, <code>/api/v1/auth</code>. Ship the API right on web, Flutter gets it for free.</div>
+    </div>
+
+    <h3>Flutter Phases</h3>
+    <div class="phases">
+      <div class="phase">
+        <div class="pw now"><div class="wl">Phase 1</div><div class="wt">~6 weeks</div></div>
+        <div>
+          <h4>Catalogue + Lead Capture (Web Parity)</h4>
+          <ul>
+            <li>WhatsApp OTP login (same backend auth)</li>
+            <li>Browse products, category filters, product detail</li>
+            <li>WhatsApp CTA ("Get price"), local wishlist</li>
+            <li>Push notifications via Firebase FCM</li>
+            <li>No new backend endpoints needed</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw next"><div class="wl">Phase 2</div><div class="wt">~4 weeks</div></div>
+        <div>
+          <h4>Orders + Account + 3D Viewer + AR</h4>
+          <ul>
+            <li>Checkout + Razorpay Flutter SDK (UPI, cards, EMI)</li>
+            <li>Order history, wishlist sync to DB</li>
+            <li>3D product viewer via <code>model_viewer_plus</code> (.glb)</li>
+            <li>AR "place in room" — ARKit (iOS) + ARCore (Android)</li>
+            <li>Push for order status, price drops, delivery</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw later"><div class="wl">Phase 3</div><div class="wt">~6 weeks</div></div>
+        <div>
+          <h4>AI Interior Render ("Design my room")</h4>
+          <ul>
+            <li>Snap room photo → 4 AI-furnished variants</li>
+            <li>Shoppable hotspots on each render (tap → product)</li>
+            <li>Async GPU job + push notification when ready</li>
+            <li>3 free renders/day, ₹10/render after</li>
+            <li>Requires GPU Microservice (Module 15)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw later"><div class="wl">Phase 4</div><div class="wt">~4 weeks</div></div>
+        <div>
+          <h4>Referral + Saved Rooms + Community Feed</h4>
+          <ul>
+            <li>Referral codes, credit balance, redeem at checkout</li>
+            <li>Saved AI room designs with shoppable product links</li>
+            <li>Community feed: customers post real room photos</li>
+            <li>Product tagging → best free organic acquisition</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <h3>Flutter Tech Stack</h3>
+    <table>
+      <thead><tr><th>Purpose</th><th>Package</th></tr></thead>
+      <tbody>
+        <tr><td>HTTP + typed API client</td><td><code>dio</code> + auto-generated Dart SDK from OpenAPI spec (Zod → OpenAPI → dart)</td></tr>
+        <tr><td>State management</td><td><code>riverpod</code> (or Bloc)</td></tr>
+        <tr><td>Navigation</td><td><code>go_router</code> (deep links for IG/WA shares)</td></tr>
+        <tr><td>Secure storage (JWT)</td><td><code>flutter_secure_storage</code> — never SharedPreferences for auth tokens</td></tr>
+        <tr><td>3D model viewer</td><td><code>model_viewer_plus</code> (glTF / .glb)</td></tr>
+        <tr><td>AR unified</td><td><code>ar_flutter_plugin</code> (ARKit + ARCore cross-platform)</td></tr>
+        <tr><td>Push notifications</td><td>Firebase Cloud Messaging (FCM)</td></tr>
+        <tr><td>Payments</td><td><code>razorpay_flutter</code> (UPI + cards + EMI)</td></tr>
+        <tr><td>Image caching</td><td><code>cached_network_image</code></td></tr>
+        <tr><td>Analytics</td><td>PostHog Flutter SDK (same account as web)</td></tr>
+        <tr><td>WA share</td><td><code>share_plus</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- MODULE 14: AR/3D -->
+<section class="sec" id="ar-3d">
+  <div class="sec-head">
+    <span class="sec-num n-later">MODULE 14</span>
+    <h2>3D + AR Placement Module</h2>
+    <span class="sec-desc">Flutter Phase 2 · Zero per-use runtime cost · Ships before AI render</span>
+  </div>
+  <div class="sec-body">
+    <h3>Three Distinct Capabilities — Build in Order</h3>
+    <table>
+      <thead><tr><th>Capability</th><th>What It Is</th><th>Cost</th><th>Build When</th></tr></thead>
+      <tbody>
+        <tr><td><strong>3D Product View</strong></td><td>Spin a sofa in 3D on product detail page. Pre-built .glb loaded into model_viewer_plus.</td><td>~₹0 runtime. ₹3K–₹15K one-time per .glb model.</td><td>Flutter Phase 2</td></tr>
+        <tr><td><strong>AR Placement</strong></td><td>"See this sofa in my actual room" via phone camera. .glb anchored to ARKit/ARCore floor plane.</td><td>~₹0 runtime. On-device processing only.</td><td>Flutter Phase 2</td></tr>
+        <tr><td><strong>AI Interior Generation</strong></td><td>Upload room photo → AI generates 4 furnished variants. Module 15 — do NOT build yet.</td><td>~₹40–₹100 per render session (GPU cloud).</td><td>Flutter Phase 3</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout c-ok">
+      <span class="ci">✓</span>
+      <div class="ct"><strong>AR Before AI Renders.</strong> AR placement removes the #1 furniture objection ("will it fit?") at zero ongoing cost. Ship this in Flutter Phase 2. Wait for 200+ engaged users before building the AI render pipeline.</div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 15: AI VR -->
+<section class="sec" id="ai-vr">
+  <div class="sec-head">
+    <span class="sec-num n-later">MODULE 15</span>
+    <h2>AI Interior Render Module</h2>
+    <span class="sec-desc">Flutter Phase 3 · GPU Microservice · Build LAST</span>
+  </div>
+  <div class="sec-body">
+    <h3>Full Pipeline</h3>
+    <div class="cb">Flutter app
+  → 1. User snaps empty room photo
+  → POST /api/v1/vr/render {roomImage, style, productPool}
+
+Next.js Backend (orchestrator only — no GPU here, ever)
+  → 2. Upload image to ImageKit
+  → 3. Check rate limit: 3 free/day via Upstash, then ₹10/render via Razorpay
+  → 4. Push job to Upstash QStash queue
+
+GPU Microservice (Python + FastAPI · separate deploy on Modal / Replicate)
+  → 5. Depth-Anything-V2 room understanding + segmentation
+  → 6. Flux/ControlNet: 4 style variants (minimal / traditional / coastal / modern)
+  → 7. Overlay our actual product images at detected placement points
+  → 8. Return 4 composite renders + product_ids used
+
+Backend stores renders → fires FCM push to Flutter
+  → "Your room designs are ready"
+  → User taps render → shoppable hotspots → product detail → WA "I want this"</div>
+
+    <h3>Start / Scale Options</h3>
+    <table>
+      <thead><tr><th>Layer</th><th>Start With</th><th>Scale To</th><th>Trigger</th></tr></thead>
+      <tbody>
+        <tr><td>Base image model</td><td>Replicate Flux + ControlNet</td><td>Self-hosted SDXL on RunPod</td><td>10K renders/day</td></tr>
+        <tr><td>Room understanding</td><td>Depth-Anything-V2 (Replicate)</td><td>Custom-trained model on Kerala homes</td><td>Product-market fit confirmed</td></tr>
+        <tr><td>Job queue</td><td>Upstash QStash (500/day free)</td><td>Self-hosted BullMQ on Railway</td><td>&gt;500 jobs/day</td></tr>
+        <tr><td>GPU compute</td><td>Replicate pay-per-call</td><td>Reserved A100s on RunPod</td><td>Cost math favours reserved</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout c-danger">
+      <span class="ci">✗</span>
+      <div class="ct"><strong>Do NOT build Module 15 before Flutter Phase 3.</strong> Needs 200+ engaged app users to be worth ₹40–₹100/session. Without that audience it's a tech demo burning GPU budget. AR (Module 14) gives the "wow" at zero ongoing cost first.</div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 16: SCALE -->
+<section class="sec" id="scale">
+  <div class="sec-head">
+    <span class="sec-num n-infra">MODULE 16</span>
+    <h2>Scaling Strategy — Survives vs Swaps</h2>
+    <span class="sec-desc">Architecture decisions · No rewrites at year 2</span>
+  </div>
+  <div class="sec-body">
+    <h3>Decisions That Survive Day 1 → Year 5+</h3>
+    <table>
+      <thead><tr><th>Decision</th><th>Why It Survives</th></tr></thead>
+      <tbody>
+        <tr><td>Neon Postgres as system of record</td><td>Scales to billions of rows. Used by Instagram, Stripe, Notion. Boring is good.</td></tr>
+        <tr><td>JSON HTTP API as the contract surface</td><td>Every client speaks it. Every language. Every team. No coupling.</td></tr>
+        <tr><td>JWT auth, server-issued</td><td>Identical for web cookie, Flutter Bearer, partner API keys.</td></tr>
+        <tr><td>Stateless API servers</td><td>Vercel today, Kubernetes later — same code, more instances.</td></tr>
+        <tr><td>Storage decoupled (ImageKit → S3 path)</td><td>Swap CDN providers in a weekend without touching app code.</td></tr>
+        <tr><td>Money as integer paise</td><td>Zero rounding bugs at any scale. Already done.</td></tr>
+        <tr><td>Drizzle ORM</td><td>Scales fine. Never replace it.</td></tr>
+        <tr><td>One <code>cached()</code> wrapper for Redis</td><td>Today Upstash. Tomorrow ElastiCache. App code unchanged.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Swap at Scale — Good Now, Replace at Threshold</h3>
+    <table>
+      <thead><tr><th>Now</th><th>Swap With</th><th>Trigger</th></tr></thead>
+      <tbody>
+        <tr><td>Vercel hosting</td><td>AWS / GCP with K8s</td><td>$50K/month Vercel bill</td></tr>
+        <tr><td>Neon serverless</td><td>Neon Enterprise or AWS Aurora</td><td>1B+ rows, &gt;5K QPS</td></tr>
+        <tr><td>Upstash Redis</td><td>ElastiCache cluster</td><td>&gt;10K ops/sec sustained</td></tr>
+        <tr><td>Postgres full-text search</td><td>Typesense / Meilisearch</td><td>5K+ active SKUs</td></tr>
+        <tr><td>Vercel Cron</td><td>K8s CronJobs + BullMQ</td><td>&gt;100 jobs/day or &gt;60s runs</td></tr>
+        <tr><td>Replicate for GPU</td><td>Reserved RunPod A100s</td><td>&gt;10K renders/day</td></tr>
+        <tr><td>Anthropic API direct</td><td>Multi-provider with fallback</td><td>$100K/month AI spend</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- MODULE 17: ROADMAP -->
+<section class="sec" id="roadmap">
+  <div class="sec-head">
+    <span class="sec-num n-infra">MODULE 17</span>
+    <h2>Master Roadmap — Ordered Build Sequence</h2>
+    <span class="sec-desc">Web + Admin first · Automation next · Flutter after</span>
+  </div>
+  <div class="sec-body">
+    <h3>Phase 0 — Foundation (Week 1–3): Web + Admin Launch</h3>
+    <div class="phases">
+      <div class="phase">
+        <div class="pw now"><div class="wl">Week 1</div><div class="wt">Core infra</div></div>
+        <div>
+          <h4>Auth + WhatsApp + Lead Capture</h4>
+          <ul>
+            <li>WA Cloud API approved, phone number registered</li>
+            <li>WhatsApp OTP login (<code>lib/auth/neon-auth.ts</code>)</li>
+            <li><code>users</code>, <code>leads</code>, <code>wa_messages</code> tables (Drizzle migration)</li>
+            <li>Lead capture modal on product pages (product_cta)</li>
+            <li>Catalog CTA sticky button → WA template auto-send</li>
+            <li>Admin lead inbox — reply from one place</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw now"><div class="wl">Week 2</div><div class="wt">SEO + tracking</div></div>
+        <div>
+          <h4>SEO + Analytics + Tracking</h4>
+          <ul>
+            <li>Sitemap, robots, JSON-LD schema on all pages</li>
+            <li>OG images via @vercel/og, Core Web Vitals audit</li>
+            <li>Meta Pixel + CAPI (server-side), GA4, PostHog</li>
+            <li>Google Business Profile live</li>
+            <li>Sentry error monitoring</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw now"><div class="wl">Week 3</div><div class="wt">SEO + first ads</div></div>
+        <div>
+          <h4>84 Programmatic SEO Pages + Meta Ads Test</h4>
+          <ul>
+            <li>84 city × category pages generated by Claude API</li>
+            <li>Submitted to Google Search Console</li>
+            <li>Exit-intent coupon modal live</li>
+            <li>First ₹3K Meta Ads test (goal: lead data + CPL baseline)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <h3>Phase 1 — Monetisation (Week 4–8)</h3>
+    <div class="phases">
+      <div class="phase">
+        <div class="pw next"><div class="wl">Week 4–5</div><div class="wt">Revenue flow</div></div>
+        <div>
+          <h4>Orders + Payments + Admin Orders Dashboard</h4>
+          <ul>
+            <li>Razorpay integration (create order + webhook HMAC)</li>
+            <li>Order management in admin panel</li>
+            <li>WA order confirmation + delivery update templates</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw next"><div class="wl">Week 6–7</div><div class="wt">AI + automation</div></div>
+        <div>
+          <h4>AI Chat + Lead Scoring + Drip Sequences</h4>
+          <ul>
+            <li>Claude Haiku chatbot (site widget + WA bot)</li>
+            <li>Automated lead scoring on every WA message</li>
+            <li>Nurture drip (WA + email), cart abandonment</li>
+            <li>Referral system + coupon engine</li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw next"><div class="wl">Week 8</div><div class="wt">Scale traffic</div></div>
+        <div>
+          <h4>Acquisition Scale</h4>
+          <ul>
+            <li>Lookalike audiences from first 50 leads → ₹10K/mo Meta Ads</li>
+            <li>IndiaMART, JustDial, Facebook Marketplace listings</li>
+            <li>Instagram Reels daily cadence, Pinterest 20 pins/week</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <h3>Phase 2 — Flutter App (Month 3–5)</h3>
+    <div class="phases">
+      <div class="phase">
+        <div class="pw later"><div class="wl">Month 3</div><div class="wt">~6 weeks</div></div>
+        <div>
+          <h4>Flutter Phase 1 — Catalogue + Lead Capture</h4>
+          <p>WA OTP login · Product browse · WA CTA · FCM push notifications · Zero new backend endpoints</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw later"><div class="wl">Month 4–5</div><div class="wt">~4 weeks</div></div>
+        <div>
+          <h4>Flutter Phase 2 — Orders + 3D + AR</h4>
+          <p>Razorpay checkout · Order history · 3D viewer (.glb) · AR placement (ARKit / ARCore) · Wishlist sync to DB</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Phase 3 — AI + Advanced (Month 6+)</h3>
+    <div class="phases">
+      <div class="phase">
+        <div class="pw later"><div class="wl">Month 6–7</div><div class="wt">~6 weeks</div></div>
+        <div>
+          <h4>Flutter Phase 3 — AI Interior Render (Module 15)</h4>
+          <p>GPU microservice setup (Modal/Replicate) · Room photo → 4 shoppable variants · Async queue + push · Rate limiting + pay-per-render</p>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="pw later"><div class="wl">Month 8+</div><div class="wt">Ongoing</div></div>
+        <div>
+          <h4>Community + Social + Scale</h4>
+          <p>Customer room photo feed with product tagging · Influencer barter (3 Kerala home accounts) · Advanced analytics · Scale infra at thresholds (Module 16)</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout c-ok">
+      <span class="ci">✓</span>
+      <div class="ct"><strong>Realistic Targets:</strong> 5–10 orders by Month 2 (web + admin live). 30+ orders/month by Month 3 (automation + Meta Ads). Flutter adds a second acquisition surface Month 3–4. AI/AR converts high-intent users from Month 5+.</div>
+    </div>
+  </div>
+</section>
+
+<!-- NEVER LIST -->
+<section class="sec" id="never">
+  <div class="sec-head">
+    <span class="sec-num n-rule">RULES</span>
+    <h2>The NEVER List</h2>
+    <span class="sec-desc">Violations that cause full rewrites at year 2</span>
+  </div>
+  <div class="sec-body">
+    <ul class="nlist">
+      <li><strong>Never build a second backend for Flutter.</strong> Flutter is a client of the Next.js API. One backend. Forever.</li>
+      <li><strong>Never put the admin panel in Flutter.</strong> Admin stays web-only at /admin. Phones are not for data management.</li>
+      <li><strong>Never store API keys or secrets in the Flutter app.</strong> Every key reachable from mobile is compromised within days.</li>
+      <li><strong>Never use float for money.</strong> All monetary values are integer paise. <code>price_paise INT NOT NULL</code>. No exceptions.</li>
+      <li><strong>Never send WhatsApp messages without explicit opt-in.</strong> Meta bans numbers. <code>opted_in_whatsapp = true</code> is the gate — every send checks this.</li>
+      <li><strong>Never skip API versioning.</strong> All routes: <code>/api/v1/...</code>. Flutter apps can't force-update overnight — old app versions will keep calling the same URLs.</li>
+      <li><strong>Never build Module 15 (AI Interior Render) before Flutter Phase 3.</strong> Needs 200+ engaged app users. Without users it burns ₹40–₹100/session with zero conversion lift.</li>
+      <li><strong>Never build HTML-coupled API routes.</strong> Every API route returns JSON. Every input is JSON. No server-rendered API responses.</li>
+      <li><strong>Never let admin panel bypass the service layer.</strong> Admin actions go through the same service functions the app uses. No direct Drizzle queries in admin route handlers — everything through the service layer.</li>
+      <li><strong>Never tightly couple a feature to one vendor's UI.</strong> Pricing changes. Always abstract vendor integrations behind a wrapper function (e.g. <code>lib/whatsapp/client.ts</code>, <code>cached()</code>).</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  Alvari Master Build Plan · v2 Corrected · Module-Based · marketingnizamudheen@gmail.com · Wayanad, Kerala · May 2026
+</footer>
+
+</div>
+</body>
+</html>

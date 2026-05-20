@@ -1,15 +1,39 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteNav } from "@/components/layout/site-nav";
 import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
+import { JsonLd } from "@/components/seo/json-ld";
 import { ProductCard } from "@/features/products/components/product-card";
 import { getAllProducts } from "@/features/products/services/product-service";
 import { CATEGORY_LABEL, type ProductCategory } from "@/features/products/types";
+import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 
 export const revalidate = 60;
 
 type SearchParams = Promise<{ category?: string }>;
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}): Promise<Metadata> {
+  const { category } = await searchParams;
+  const cat =
+    category && category in CATEGORY_LABEL ? (category as ProductCategory) : null;
+  const label = cat ? CATEGORY_LABEL[cat] : null;
+  const title = label ? `${label} — Factory Prices, Kerala` : "All Furniture";
+  const description = label
+    ? `${label} built in our Wayanad workshop, delivered across Kerala. Factory prices, no middlemen.`
+    : "Wardrobes, beds, sofas, dining sets, and complete room sets — built in Wayanad, delivered across Kerala at factory prices.";
+  return {
+    title,
+    description,
+    alternates: { canonical: cat ? `/products?category=${cat}` : "/products" },
+    openGraph: { title, description, type: "website" },
+  };
+}
 
 export default async function ProductsPage({
   searchParams,
@@ -31,8 +55,23 @@ export default async function ProductsPage({
     string,
   ][];
 
+  const crumbs = activeCategory
+    ? [
+        { name: "Home", path: "/" },
+        { name: "Products", path: "/products" },
+        {
+          name: CATEGORY_LABEL[activeCategory],
+          path: `/products?category=${activeCategory}`,
+        },
+      ]
+    : [
+        { name: "Home", path: "/" },
+        { name: "Products", path: "/products" },
+      ];
+
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd(crumbs)} />
       <header className="fixed inset-x-0 top-0 z-50">
         <AnnouncementBar />
         <div className="flex justify-center px-3 pt-3 md:px-5 md:pt-4">

@@ -32,7 +32,7 @@ Do **not** hand-author SQL in `drizzle/`.
 
 3. **Generate the migration**:
    ```bash
-   npm run db:generate
+   pnpm db:generate
    ```
    This writes a new SQL file into `drizzle/`. **Read the generated SQL** —
    Drizzle infers column renames as drop+add when it can't tell. If you see a
@@ -41,12 +41,12 @@ Do **not** hand-author SQL in `drizzle/`.
 
 4. **Apply to the dev database**:
    ```bash
-   npm run db:push        # prototyping — prompts for confirmation
+   pnpm db:push        # prototyping — prompts for confirmation
    ```
    For production, commit the SQL file; deploy flow runs it.
 
 5. **Update TypeScript consumers**. `$inferSelect`/`$inferInsert` will update
-   automatically — `npm run typecheck` will flag any repos/services that no
+   automatically — `pnpm typecheck` will flag any repos/services that no
    longer type-check.
 
 6. **Update the Zod schema** if the shape changed
@@ -62,8 +62,8 @@ Do **not** hand-author SQL in `drizzle/`.
 
 9. **Verify**:
    ```bash
-   npm run typecheck
-   npm run db:studio    # optional — inspect the applied schema
+   pnpm typecheck
+   pnpm db:studio    # optional — inspect the applied schema
    ```
 
 ## Gotchas

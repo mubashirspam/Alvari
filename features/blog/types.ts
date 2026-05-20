@@ -9,6 +9,12 @@ export type BlogPost = {
   contentMarkdown: string;
   authorName: string;
   readingMinutes: number;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  tags: string[];
+  language: string;
+  category: string | null;
+  topicSlug: string | null;
   isPublished: boolean;
   publishedAt: Date | null;
 };
@@ -23,6 +29,12 @@ export function mapBlogPost(row: BlogPostRow): BlogPost {
     contentMarkdown: row.contentMarkdown,
     authorName: row.authorName,
     readingMinutes: row.readingMinutes,
+    metaTitle: row.metaTitle,
+    metaDescription: row.metaDescription,
+    tags: row.tags ?? [],
+    language: row.language,
+    category: row.category,
+    topicSlug: row.topicSlug,
     isPublished: row.isPublished,
     publishedAt: row.publishedAt,
   };

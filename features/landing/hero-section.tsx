@@ -1,22 +1,46 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+
+const HERO_IMAGES = [
+  "https://ik.imagekit.io/8i3ek2gje/Hero/hero1?updatedAt=1779261995948",
+  "https://ik.imagekit.io/8i3ek2gje/Hero/hero2?updatedAt=1779262011568",
+  "https://ik.imagekit.io/8i3ek2gje/Hero/hero3?updatedAt=1779262025723",
+];
 
 export function HeroSection() {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section
       id="home"
       className="relative bg-[var(--color-bg)] md:p-5"
     >
       <div className="relative min-h-screen w-full overflow-hidden bg-[#1a1a14] md:min-h-[calc(100vh-40px)] md:rounded-[28px]">
-        <Image
-          src="/hero.jpeg"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
+        {HERO_IMAGES.map((src, index) => (
+          <Image
+            key={src}
+            src={src}
+            alt="Hero Image"
+            fill
+            priority={index === 0}
+            sizes="100vw"
+            className={`object-cover transition-opacity duration-1000 ${
+              index === currentImageIndex ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))}
 
         <div
           className="relative z-10 flex min-h-screen w-full flex-col justify-end px-6 pt-32 pb-14 md:min-h-[calc(100vh-40px)] md:px-12 md:pt-36 md:pb-20 lg:pb-24"
