@@ -28,7 +28,7 @@ export default async function HomePage() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50">
-        <PromoStrip />
+        {/* <PromoStrip /> */}
         <div className="flex justify-center px-3 pt-3 md:px-5 md:pt-4">
           <HeaderWrapper>
             <SiteNav variant="clubbed" />
