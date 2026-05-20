@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CategoryNav } from "@/components/layout/category-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteNav } from "@/components/layout/site-nav";
+import { HeaderWrapper } from "@/components/layout/header-wrapper";
 import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { JsonLd } from "@/components/seo/json-ld";
 import { PromoStrip } from "@/features/landing/promo-strip";
@@ -76,10 +77,10 @@ export default async function ProductsPage({
       <header className="fixed inset-x-0 top-0 z-50">
         <PromoStrip />
         <div className="flex justify-center px-3 pt-3 md:px-5 md:pt-4">
-          <SiteNav />
-        </div>
-        <div className="mt-3 md:mt-4">
-          <CategoryNav />
+          <HeaderWrapper>
+            <SiteNav variant="clubbed" />
+            <CategoryNav variant="clubbed" />
+          </HeaderWrapper>
         </div>
       </header>
       <main className="pt-36 md:pt-40">

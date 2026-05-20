@@ -15,7 +15,7 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group block overflow-hidden rounded-md bg-[var(--color-bg)] transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] hover:-translate-y-2 hover:shadow-[0_24px_60px_rgb(42_26_16_/_0.1)]"
+      className="group block overflow-hidden rounded-md bg-white transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] hover:-translate-y-2 hover:shadow-[0_24px_60px_rgb(42_26_16_/_0.1)]"
     >
       <div
         className="relative flex aspect-[4/5] items-center justify-center overflow-hidden"

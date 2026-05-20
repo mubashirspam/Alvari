@@ -5,13 +5,25 @@ const STATIC_LINKS = [
   { href: "/products?sort=new", label: "New Arrivals" },
 ] as const;
 
-export async function CategoryNav() {
+export async function CategoryNav({ variant = "standalone" }: { variant?: "standalone" | "clubbed" }) {
   const categories = await getVisibleCategories();
 
   return (
-    <div className="border-y border-[var(--color-line)] bg-[var(--color-bg)]/85 backdrop-blur-xl">
-      <nav className="mx-auto max-w-[1400px] px-4 md:px-6">
-        <ul className="flex items-center gap-1 overflow-x-auto py-2 [scrollbar-width:none] md:justify-center md:gap-1 [&::-webkit-scrollbar]:hidden">
+    <div
+      className={
+        variant === "clubbed"
+          ? "border-t border-[var(--color-line)] px-2 py-1"
+          : "border-y border-[var(--color-line)] bg-[var(--color-bg)]/85 backdrop-blur-xl"
+      }
+    >
+      <nav className={variant === "clubbed" ? "w-full" : "mx-auto max-w-[1400px] px-4 md:px-6"}>
+        <ul
+          className={
+            variant === "clubbed"
+              ? "flex items-center gap-1 overflow-x-auto py-1 [scrollbar-width:none] md:justify-center md:gap-1 [&::-webkit-scrollbar]:hidden"
+              : "flex items-center gap-1 overflow-x-auto py-2 [scrollbar-width:none] md:justify-center md:gap-1 [&::-webkit-scrollbar]:hidden"
+          }
+        >
           {STATIC_LINKS.map((link) => (
             <li key={link.href} className="flex-shrink-0">
               <Link

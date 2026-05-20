@@ -10,19 +10,19 @@ const links = [
   { href: "/products", label: "Shop" },
   { href: "/#about", label: "About" },
   { href: "/#process", label: "Process" },
-  { href: "/#products", label: "Bestsellers" },
 ];
 
-export function SiteNav() {
+export function SiteNav({ variant = "standalone" }: { variant?: "standalone" | "clubbed" }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (variant === "clubbed") return;
     const handler = () => setScrolled(window.scrollY > 40);
     handler();
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
-  }, []);
+  }, [variant]);
 
   useEffect(() => {
     if (!open) return;
@@ -35,12 +35,16 @@ export function SiteNav() {
 
   return (
     <nav
-      className={cn(
-        "relative flex w-full max-w-[980px] items-center justify-between gap-2 rounded-full px-3 py-2 backdrop-blur-xl transition-all duration-400 ease-[cubic-bezier(0.76,0,0.24,1)]",
-        scrolled
-          ? "border-[var(--color-line)] bg-[var(--color-bg)]/20 shadow-lg shadow-white/10"
-          : "border-white/30 bg-white/60 shadow-sm shadow-black/5",
-      )}
+      className={
+        variant === "clubbed"
+          ? "relative flex w-full items-center justify-between gap-2 px-5 py-3"
+          : cn(
+              "relative flex w-full max-w-[980px] items-center justify-between gap-2 rounded-full px-3 py-2 backdrop-blur-xl transition-all duration-400 ease-[cubic-bezier(0.76,0,0.24,1)]",
+              scrolled
+                ? "border-[var(--color-line)] bg-[var(--color-bg)]/20 shadow-lg shadow-white/10"
+                : "border-white/30 bg-white/60 shadow-sm shadow-black/5",
+            )
+      }
     >
       <Link
         href="/"
