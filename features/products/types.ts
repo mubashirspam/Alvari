@@ -187,13 +187,16 @@ export function mapProductAggregate(agg: ProductAggregate): Product {
 export const CATEGORY_LABEL: Record<ProductCategory, string> = {
   almirah: "Almirah / Wardrobe",
   bed: "Bed",
-  sofa: "Sofa Setti",
+  sofa: "Sofa",
   dining: "Dining Set",
   dressing: "Dressing Table",
   coffee_table: "Coffee Table",
   mattress: "Mattress",
   room_set: "Complete Room Set",
   custom: "Custom / Other",
+  chair: "Chair",
+  sideboard: "Cabinet / Sideboard",
+  table: "Table",
 };
 
 export const BADGE_LABEL: Record<ProductBadge, string> = {

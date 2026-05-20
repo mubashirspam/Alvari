@@ -23,6 +23,18 @@ export const productCategoryEnum = pgEnum("product_category", [
   "mattress",
   "room_set",
   "custom",
+  "chair",
+  "sideboard",
+  "table",
+]);
+
+export const bannerSlotEnum = pgEnum("banner_slot", [
+  "hero",
+  "secondary",
+  "promo_strip",
+  "mid_page",
+  "collection_tile",
+  "category_tile",
 ]);
 
 export const productBadgeEnum = pgEnum("product_badge", [
@@ -307,6 +319,141 @@ export const adminSessionsRelations = relations(adminSessions, ({ one }) => ({
     references: [admins.id],
   }),
 }));
+
+export const categories = pgTable(
+  "categories",
+  {
+    category: productCategoryEnum("category").primaryKey(),
+    label: text("label").notNull(),
+    slug: text("slug").notNull().unique(),
+    subtitle: text("subtitle"),
+    imageKey: text("image_key"),
+    heroImageKey: text("hero_image_key"),
+    accentColor: text("accent_color"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isVisible: boolean("is_visible").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("categories_visible_idx").on(table.isVisible, table.sortOrder)],
+);
+
+export const banners = pgTable(
+  "banners",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull().unique(),
+    slot: bannerSlotEnum("slot").notNull(),
+    title: text("title"),
+    subtitle: text("subtitle"),
+    overline: text("overline"),
+    ctaLabel: text("cta_label"),
+    ctaUrl: text("cta_url"),
+    imageKey: text("image_key").notNull(),
+    mobileImageKey: text("mobile_image_key"),
+    bgColor: text("bg_color"),
+    textColor: text("text_color"),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("banners_slot_active_idx").on(
+      table.slot,
+      table.isActive,
+      table.sortOrder,
+    ),
+    index("banners_schedule_idx").on(table.startsAt, table.endsAt),
+  ],
+);
+
+export const collections = pgTable(
+  "collections",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    subtitle: text("subtitle"),
+    description: text("description"),
+    heroImageKey: text("hero_image_key"),
+    accentColor: text("accent_color"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isFeatured: boolean("is_featured").notNull().default(false),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("collections_featured_idx").on(
+      table.isFeatured,
+      table.isActive,
+      table.sortOrder,
+    ),
+  ],
+);
+
+export const collectionProducts = pgTable(
+  "collection_products",
+  {
+    collectionId: uuid("collection_id")
+      .notNull()
+      .references(() => collections.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.collectionId, table.productId] }),
+    index("collection_products_collection_idx").on(
+      table.collectionId,
+      table.sortOrder,
+    ),
+  ],
+);
+
+export const collectionsRelations = relations(collections, ({ many }) => ({
+  products: many(collectionProducts),
+}));
+
+export const collectionProductsRelations = relations(
+  collectionProducts,
+  ({ one }) => ({
+    collection: one(collections, {
+      fields: [collectionProducts.collectionId],
+      references: [collections.id],
+    }),
+    product: one(products, {
+      fields: [collectionProducts.productId],
+      references: [products.id],
+    }),
+  }),
+);
+
+export type CategoryRow = typeof categories.$inferSelect;
+export type NewCategoryRow = typeof categories.$inferInsert;
+export type BannerRow = typeof banners.$inferSelect;
+export type NewBannerRow = typeof banners.$inferInsert;
+export type CollectionRow = typeof collections.$inferSelect;
+export type NewCollectionRow = typeof collections.$inferInsert;
+export type CollectionProductRow = typeof collectionProducts.$inferSelect;
+export type NewCollectionProductRow =
+  typeof collectionProducts.$inferInsert;
 
 export type ProductRow = typeof products.$inferSelect;
 export type NewProductRow = typeof products.$inferInsert;

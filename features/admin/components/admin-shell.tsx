@@ -9,6 +9,9 @@ import { adminLogout } from "@/app/admin/actions";
 const NAV = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/products", label: "Products" },
+  { href: "/admin/categories", label: "Categories" },
+  { href: "/admin/banners", label: "Banners" },
+  { href: "/admin/collections", label: "Collections" },
   { href: "/admin/blog", label: "Blog" },
   { href: "/admin/enquiries", label: "Enquiries" },
 ];

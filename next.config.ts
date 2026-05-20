@@ -7,10 +7,8 @@ const imagekitHost = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: imagekitHost,
-      },
+      { protocol: "https", hostname: imagekitHost },
+      { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
   async rewrites() {

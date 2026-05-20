@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AnnouncementBar } from "@/components/layout/announcement-bar";
+import { CategoryNav } from "@/components/layout/category-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteNav } from "@/components/layout/site-nav";
 import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { JsonLd } from "@/components/seo/json-ld";
+import { PromoStrip } from "@/features/landing/promo-strip";
 import { ProductCard } from "@/features/products/components/product-card";
 import { getAllProducts } from "@/features/products/services/product-service";
 import { CATEGORY_LABEL, type ProductCategory } from "@/features/products/types";
@@ -73,12 +74,15 @@ export default async function ProductsPage({
     <>
       <JsonLd data={breadcrumbJsonLd(crumbs)} />
       <header className="fixed inset-x-0 top-0 z-50">
-        <AnnouncementBar />
+        <PromoStrip />
         <div className="flex justify-center px-3 pt-3 md:px-5 md:pt-4">
           <SiteNav />
         </div>
+        <div className="mt-3 md:mt-4">
+          <CategoryNav />
+        </div>
       </header>
-      <main className="pt-32">
+      <main className="pt-36 md:pt-40">
         <section className="mx-auto max-w-[1200px] px-6 pb-10 md:px-12">
           <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--color-accent)]">
             Our Collection

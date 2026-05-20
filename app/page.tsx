@@ -1,33 +1,59 @@
-import { AnnouncementBar } from "@/components/layout/announcement-bar";
-import { MarqueeStrip } from "@/components/layout/marquee-strip";
+import { CategoryNav } from "@/components/layout/category-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteNav } from "@/components/layout/site-nav";
 import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { EnquiryCtaSection } from "@/features/landing/enquiry-cta-section";
-import { HeroSection } from "@/features/landing/hero-section";
+import { FeaturedCollections } from "@/features/landing/featured-collections";
+import { HeroBanner } from "@/features/landing/hero-banner";
+import { MidPageBanner } from "@/features/landing/mid-page-banner";
 import { ProcessSection } from "@/features/landing/process-section";
-import { ProductsPreview } from "@/features/landing/products-preview";
-import { TestimonialSection } from "@/features/landing/testimonial-section";
-import { WhySection } from "@/features/landing/why-section";
+import { ProductRow } from "@/features/landing/product-row";
+import { PromoStrip } from "@/features/landing/promo-strip";
+import { ShopByCategory } from "@/features/landing/shop-by-category";
+import { TrustStrip } from "@/features/landing/trust-strip";
+import {
+  getFeaturedProducts,
+  getNewestProducts,
+} from "@/features/products/services/product-service";
 
 export const revalidate = 60;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [newArrivals, bestSellers] = await Promise.all([
+    getNewestProducts(12),
+    getFeaturedProducts(12),
+  ]);
+
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50">
-        <AnnouncementBar />
+        <PromoStrip />
         <div className="flex justify-center px-3 pt-3 md:px-5 md:pt-4">
           <SiteNav />
         </div>
+        <div className="mt-3 md:mt-4">
+          <CategoryNav />
+        </div>
       </header>
-      <main>
-        <HeroSection />
-        <MarqueeStrip />
-        <WhySection />
-        <ProductsPreview />
+      <main className="pt-36 md:pt-40">
+        <HeroBanner />
+        <TrustStrip />
+        <ShopByCategory />
+        <FeaturedCollections />
+        <ProductRow
+          overline="Just landed"
+          title="New arrivals"
+          viewAllHref="/products"
+          products={newArrivals}
+        />
+        <MidPageBanner />
+        <ProductRow
+          overline="Customer favourites"
+          title="Best sellers"
+          viewAllHref="/products"
+          products={bestSellers}
+        />
         <ProcessSection />
-        <TestimonialSection />
         <EnquiryCtaSection />
       </main>
       <SiteFooter />

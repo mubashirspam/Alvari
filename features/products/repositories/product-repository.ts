@@ -116,3 +116,34 @@ export async function findAggregateBySlug(
   const [agg] = await loadAggregates([row]);
   return agg ?? null;
 }
+
+export async function findNewestRows(limit: number): Promise<ProductRow[]> {
+  return db
+    .select()
+    .from(products)
+    .where(eq(products.isActive, true))
+    .orderBy(desc(products.createdAt))
+    .limit(limit);
+}
+
+export async function findNewestAggregates(
+  limit: number,
+): Promise<ProductAggregate[]> {
+  const rows = await findNewestRows(limit);
+  return loadAggregates(rows);
+}
+
+export async function findRowsByIds(ids: string[]): Promise<ProductRow[]> {
+  if (ids.length === 0) return [];
+  return db
+    .select()
+    .from(products)
+    .where(inArray(products.id, ids));
+}
+
+export async function findAggregatesByIds(
+  ids: string[],
+): Promise<ProductAggregate[]> {
+  const rows = await findRowsByIds(ids);
+  return loadAggregates(rows);
+}
