@@ -53,11 +53,12 @@ export function ImageManager({ productId, initialImages, variants }: Props) {
         const err = await authRes.json().catch(() => ({})) as { message?: string };
         throw new Error(err.message ?? "Failed to get upload credentials");
       }
-      const { token, expire, signature, publicKey } = (await authRes.json()) as {
+      const { token, expire, signature, publicKey, folder: serverFolder } = (await authRes.json()) as {
         token: string;
         expire: number;
         signature: string;
         publicKey: string;
+        folder?: string;
       };
 
       // 2. Upload directly to ImageKit from the browser
@@ -72,7 +73,7 @@ export function ImageManager({ productId, initialImages, variants }: Props) {
         expire,
         signature,
         publicKey,
-        folder: "/kaasth/products",
+        folder: serverFolder ?? "/kaasth/products",
         useUniqueFileName: true,
         onProgress: (e) => {
           if (e.total) setUploadProgress(Math.round((e.loaded / e.total) * 100));

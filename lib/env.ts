@@ -6,6 +6,7 @@ const envSchema = z.object({
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   IMAGEKIT_PUBLIC_KEY: z.string().optional(),
   IMAGEKIT_PRIVATE_KEY: z.string().optional(),
+  IMAGEKIT_FOLDER_PREFIX: z.string().optional(),
   NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT: z.string().url().optional(),
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   NEXT_PUBLIC_WHATSAPP_NUMBER: z.string().optional(),
@@ -17,6 +18,9 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_MODEL: z.string().optional(),
   CRON_SECRET: z.string().min(16).optional(),
+  STAGING_PASSWORD: z.string().optional(),
+  SENTRY_DSN: z.string().url().optional(),
+  NEXT_PUBLIC_ENV_MODE: z.enum(["production", "staging", "development"]).optional(),
 });
 
 export const env = envSchema.parse({
@@ -25,6 +29,7 @@ export const env = envSchema.parse({
   UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
   IMAGEKIT_PUBLIC_KEY: process.env.IMAGEKIT_PUBLIC_KEY,
   IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY,
+  IMAGEKIT_FOLDER_PREFIX: process.env.IMAGEKIT_FOLDER_PREFIX,
   NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT:
     process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT,
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
@@ -37,7 +42,31 @@ export const env = envSchema.parse({
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   ANTHROPIC_MODEL: process.env.ANTHROPIC_MODEL,
   CRON_SECRET: process.env.CRON_SECRET,
+  STAGING_PASSWORD: process.env.STAGING_PASSWORD,
+  SENTRY_DSN: process.env.SENTRY_DSN,
+  NEXT_PUBLIC_ENV_MODE: process.env.NEXT_PUBLIC_ENV_MODE,
 });
+
+export type EnvMode = "production" | "staging" | "development";
+
+/**
+ * Resolve which environment this process is running in.
+ * Order of precedence:
+ *   1. NEXT_PUBLIC_ENV_MODE (explicit override, useful for local pointing-at-staging)
+ *   2. VERCEL_ENV (production | preview | development) — set by Vercel
+ *   3. NODE_ENV (production | development) — fallback
+ */
+export function envMode(): EnvMode {
+  if (env.NEXT_PUBLIC_ENV_MODE) return env.NEXT_PUBLIC_ENV_MODE;
+  const vercelEnv = process.env.VERCEL_ENV;
+  if (vercelEnv === "production") return "production";
+  if (vercelEnv === "preview") return "staging";
+  if (process.env.NODE_ENV === "production") return "production";
+  return "development";
+}
+
+export const isProd = (): boolean => envMode() === "production";
+export const isStaging = (): boolean => envMode() === "staging";
 
 export const siteConfig = {
   name: "Alvari Furniture",

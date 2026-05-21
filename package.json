@@ -15,9 +15,14 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:push": "DRIZZLE_ENV=staging drizzle-kit push",
+    "db:push:staging": "DRIZZLE_ENV=staging drizzle-kit push",
+    "db:push:prod": "DRIZZLE_ENV=prod drizzle-kit push",
+    "db:migrate": "DRIZZLE_ENV=staging drizzle-kit migrate",
+    "db:migrate:prod": "DRIZZLE_ENV=prod drizzle-kit migrate",
+    "db:studio": "DRIZZLE_ENV=staging drizzle-kit studio",
+    "db:studio:prod": "DRIZZLE_ENV=prod drizzle-kit studio",
+    "db:seed": "DRIZZLE_ENV=staging tsx scripts/seed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.97.1",

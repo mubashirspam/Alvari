@@ -9,6 +9,7 @@ import {
   type AdminSessionRow,
 } from "@/lib/db/schema";
 import { SESSION_COOKIE, SESSION_TTL_DAYS } from "@/lib/auth/constants";
+import { neonAuth } from "@/lib/auth/neon-auth";
 
 export { SESSION_COOKIE } from "@/lib/auth/constants";
 
@@ -86,12 +87,50 @@ export async function clearSessionCookie(): Promise<void> {
   });
 }
 
-export async function getCurrentAdmin(): Promise<AdminRow | null> {
+async function getCurrentAdminFromLegacyCookie(): Promise<AdminRow | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const result = await findAdminBySessionToken(token);
   return result?.admin ?? null;
+}
+
+async function getCurrentAdminFromNeonAuth(): Promise<AdminRow | null> {
+  try {
+    const { data: session } = await neonAuth.getSession();
+    const user = session?.user as
+      | { email?: string | null; name?: string | null; role?: string | null }
+      | undefined;
+    if (!user?.email) return null;
+    if (user.role !== "admin") return null;
+
+    const rows = await db
+      .select()
+      .from(admins)
+      .where(eq(admins.email, user.email))
+      .limit(1);
+    if (rows[0]) return rows[0];
+
+    // Neon Auth admin without a row in admins table — synthesize a minimal one
+    // so downstream code that types against AdminRow keeps working.
+    return {
+      id: "neon-auth-virtual",
+      email: user.email,
+      passwordHash: "",
+      name: user.name ?? null,
+      role: "admin",
+      createdAt: new Date(),
+      lastLoginAt: null,
+    } satisfies AdminRow;
+  } catch {
+    return null;
+  }
+}
+
+export async function getCurrentAdmin(): Promise<AdminRow | null> {
+  const fromNeon = await getCurrentAdminFromNeonAuth();
+  if (fromNeon) return fromNeon;
+  return getCurrentAdminFromLegacyCookie();
 }
 
 export async function requireAdmin(): Promise<AdminRow> {

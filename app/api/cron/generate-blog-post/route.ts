@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { env } from "@/lib/env";
+import { env, isProd } from "@/lib/env";
 import { isAnthropicConfigured } from "@/lib/anthropic";
 import { generateNextPost } from "@/features/blog/services/blog-service";
 
@@ -19,6 +19,14 @@ function isAuthorized(req: Request): boolean {
 export async function GET(req: Request) {
   if (!isAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+  if (!isProd()) {
+    return NextResponse.json({
+      ok: true,
+      skipped: "non-production",
+      message:
+        "Cron is gated to production deployments only. Set NEXT_PUBLIC_ENV_MODE=production to override locally.",
+    });
   }
   if (!isAnthropicConfigured()) {
     return NextResponse.json(
