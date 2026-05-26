@@ -1,6 +1,6 @@
 # Alvari — Direct-from-Factory Furniture
 
-Production Next.js 16 app for Alvari, a Wayanad-based furniture workshop selling direct to customers across Kerala.
+Alvari, a Wayanad-based furniture workshop selling direct to customers across Kerala.
 
 ## Stack
 
