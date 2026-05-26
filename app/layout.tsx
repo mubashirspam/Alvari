@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import { JsonLd } from "@/components/seo/json-ld";
+import { CartDrawer } from "@/features/cart/components/cart-drawer";
 import { siteConfig } from "@/lib/env";
 import { localBusinessJsonLd, organizationJsonLd } from "@/lib/seo/jsonld";
 import "./globals.css";
@@ -68,6 +69,7 @@ export default function RootLayout({
       <body>
         <JsonLd data={[organizationJsonLd(), localBusinessJsonLd()]} />
         {children}
+        <CartDrawer />
       </body>
     </html>
   );

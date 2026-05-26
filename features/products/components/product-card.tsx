@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatINR } from "@/lib/utils";
 import { buildImageKitUrl } from "@/lib/imagekit";
+import { AddToCartButton } from "@/features/cart/components/add-to-cart-button";
 import {
   BADGE_LABEL,
   HOT_BADGES,
@@ -57,6 +58,10 @@ export function ProductCard({ product }: { product: Product }) {
           <span className="border-b border-[var(--color-bg)]/40 pb-1 text-xs uppercase tracking-[0.12em] text-[var(--color-bg)]">
             View details
           </span>
+        </div>
+
+        <div className="absolute right-3 bottom-3 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <AddToCartButton product={product} />
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { ProductIllustration } from "@/features/products/components/product-illustration";
 import type { Product, ProductImage, ProductVariant } from "@/features/products/types";
 import { BADGE_LABEL, HOT_BADGES } from "@/features/products/types";
+import { AddToCartButton } from "@/features/cart/components/add-to-cart-button";
 import { siteConfig } from "@/lib/env";
 import { buildImageKitUrl } from "@/lib/imagekit";
 import { formatINR } from "@/lib/utils";
@@ -259,20 +260,21 @@ export function ProductGallery({ product }: Props) {
             </dl>
           )}
 
-        <div className="mt-10 flex flex-wrap gap-4">
+        <div className="mt-10 flex flex-wrap gap-3">
+          <AddToCartButton
+            product={product}
+            variant={selectedVariant}
+            imageUrl={product.imageUrl}
+            shape="full"
+            label="Add to quotation"
+          />
           <a
             href={`https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(whatsappMsg)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 rounded-full bg-[var(--color-ink)] px-9 py-4 text-sm tracking-wider text-[var(--color-bg)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[var(--color-accent)]"
+            className="inline-flex items-center gap-2.5 rounded-full border border-[var(--color-line)] px-7 py-3.5 text-[13px] font-medium uppercase tracking-[0.12em] text-[var(--color-ink)] transition-all duration-300 hover:border-[var(--color-accent)]"
           >
-            Enquire on WhatsApp
-          </a>
-          <a
-            href="#enquiry"
-            className="inline-flex items-center rounded-full border border-[var(--color-line)] px-9 py-4 text-sm tracking-wider text-[var(--color-ink)] transition-all duration-300 hover:border-[var(--color-accent)]"
-          >
-            Send enquiry form
+            Ask on WhatsApp
           </a>
         </div>
       </div>

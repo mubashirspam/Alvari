@@ -472,3 +472,120 @@ export type AdminSessionRow = typeof adminSessions.$inferSelect;
 export type NewAdminSessionRow = typeof adminSessions.$inferInsert;
 export type EnquiryRow = typeof enquiries.$inferSelect;
 export type NewEnquiryRow = typeof enquiries.$inferInsert;
+
+// ────────────────────────────────────────────────────────────────────────────
+// Conversational commerce: users + orders + order_items
+// ────────────────────────────────────────────────────────────────────────────
+
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    email: text("email").unique(),
+    name: text("name"),
+    phone: text("phone"),
+    googleId: text("google_id").unique(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("users_phone_idx").on(table.phone)],
+);
+
+export const orderStatusEnum = pgEnum("order_status", [
+  "pending",
+  "confirmed",
+  "in_production",
+  "shipped",
+  "delivered",
+  "cancelled",
+]);
+
+export const orders = pgTable(
+  "orders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    shortCode: text("short_code").notNull().unique(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    customerName: text("customer_name").notNull(),
+    customerPhone: text("customer_phone").notNull(),
+    customerEmail: text("customer_email"),
+    shippingAddress: text("shipping_address").notNull(),
+    notes: text("notes"),
+    subtotalInPaise: integer("subtotal_in_paise").notNull(),
+    totalInPaise: integer("total_in_paise").notNull(),
+    status: orderStatusEnum("status").notNull().default("pending"),
+    placedVia: text("placed_via").notNull().default("whatsapp"),
+    whatsappOpenedAt: timestamp("whatsapp_opened_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("orders_user_idx").on(table.userId, table.createdAt),
+    index("orders_phone_idx").on(table.customerPhone, table.createdAt),
+    index("orders_status_idx").on(table.status, table.createdAt),
+  ],
+);
+
+export const orderItems = pgTable(
+  "order_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    productId: uuid("product_id").references(() => products.id, {
+      onDelete: "set null",
+    }),
+    productSlug: text("product_slug").notNull(),
+    productName: text("product_name").notNull(),
+    variantId: uuid("variant_id").references(() => productVariants.id, {
+      onDelete: "set null",
+    }),
+    variantSku: text("variant_sku"),
+    variantName: text("variant_name"),
+    unitPriceInPaise: integer("unit_price_in_paise").notNull(),
+    quantity: integer("quantity").notNull(),
+    lineTotalInPaise: integer("line_total_in_paise").notNull(),
+    imageUrl: text("image_url"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("order_items_order_idx").on(table.orderId)],
+);
+
+export const usersRelations = relations(users, ({ many }) => ({
+  orders: many(orders),
+}));
+
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  user: one(users, { fields: [orders.userId], references: [users.id] }),
+  items: many(orderItems),
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderItems.orderId],
+    references: [orders.id],
+  }),
+  product: one(products, {
+    fields: [orderItems.productId],
+    references: [products.id],
+  }),
+}));
+
+export type UserRow = typeof users.$inferSelect;
+export type NewUserRow = typeof users.$inferInsert;
+export type OrderRow = typeof orders.$inferSelect;
+export type NewOrderRow = typeof orders.$inferInsert;
+export type OrderItemRow = typeof orderItems.$inferSelect;
+export type NewOrderItemRow = typeof orderItems.$inferInsert;
+export type OrderStatus = OrderRow["status"];

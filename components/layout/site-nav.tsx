@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, X, MessageCircle } from "lucide-react";
+import { Menu, X, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/env";
+import { CartButton } from "@/features/cart/components/cart-button";
 
 const links = [
   { href: "/products", label: "Shop" },
@@ -70,6 +71,14 @@ export function SiteNav({ variant = "standalone" }: { variant?: "standalone" | "
       </ul>
 
       <div className="flex items-center gap-1.5">
+        <Link
+          href="/account/orders"
+          aria-label="My orders"
+          className="hidden h-9 w-9 items-center justify-center rounded-full border border-[var(--color-line)] text-[var(--color-ink)] transition-colors hover:border-[var(--color-accent)] md:inline-flex"
+        >
+          <User className="h-4 w-4" strokeWidth={1.6} />
+        </Link>
+        <CartButton className="h-9 w-9" />
         <button
           onClick={() => window.open(`https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent("Hi Alvari, I'd like to know more about your furniture")}`, "_blank")}
           className="hidden items-center gap-1.5 rounded-full bg-[var(--color-ink)] px-4 py-2 text-[13px] font-medium text-[var(--color-bg)] transition-all duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] hover:bg-[var(--color-accent)] md:inline-flex cursor-pointer"
