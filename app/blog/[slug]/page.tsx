@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteNav } from "@/components/layout/site-nav";
+import { NavWrapper } from "@/components/layout/nav-wrapper";
 import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getPublishedPostBySlug } from "@/features/blog/services/blog-service";
@@ -78,7 +78,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
       <header className="fixed inset-x-0 top-0 z-50">
         <AnnouncementBar />
         <div className="flex justify-center px-3 pt-3 md:px-5 md:pt-4">
-          <SiteNav />
+          <NavWrapper />
         </div>
       </header>
       <main className="pt-32">

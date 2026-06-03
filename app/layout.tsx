@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, DM_Serif_Display } from "next/font/google";
+import { DM_Sans, Montserrat } from "next/font/google";
 import { JsonLd } from "@/components/seo/json-ld";
 import { CartDrawer } from "@/features/cart/components/cart-drawer";
 import { siteConfig } from "@/lib/env";
@@ -13,11 +13,10 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-const dmSerif = DM_Serif_Display({
-  variable: "--font-dm-serif",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -65,7 +64,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable}`}>
+    <html lang="en" className={`${dmSans.variable} ${montserrat.variable}`}>
       <body>
         <JsonLd data={[organizationJsonLd(), localBusinessJsonLd()]} />
         {children}

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CategoryNav } from "@/components/layout/category-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteNav } from "@/components/layout/site-nav";
+import { NavWrapper } from "@/components/layout/nav-wrapper";
 import { HeaderWrapper } from "@/components/layout/header-wrapper";
 import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -90,14 +89,11 @@ export default async function ProductsPage({
       <JsonLd data={breadcrumbJsonLd(crumbs)} />
       <header className="fixed inset-x-0 top-0 z-50">
         <PromoStrip />
-        <div className="flex justify-center px-3 pt-3 md:px-5 md:pt-4">
-          <HeaderWrapper>
-            <SiteNav variant="clubbed" />
-            <CategoryNav variant="clubbed" />
-          </HeaderWrapper>
-        </div>
+        <HeaderWrapper>
+          <NavWrapper variant="clubbed" />
+        </HeaderWrapper>
       </header>
-      <main className="pt-36 md:pt-40">
+      <main className="pt-28">
         <section className="mx-auto max-w-[1200px] px-6 pb-10 md:px-12">
           <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--color-accent)]">
             Our Collection

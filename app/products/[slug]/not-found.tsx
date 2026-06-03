@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteNav } from "@/components/layout/site-nav";
+import { NavWrapper } from "@/components/layout/nav-wrapper";
 
 export default function NotFound() {
   return (
@@ -9,7 +9,7 @@ export default function NotFound() {
       <header className="fixed inset-x-0 top-0 z-50">
         <AnnouncementBar />
         <div className="flex justify-center px-3 pt-3 md:px-5 md:pt-4">
-          <SiteNav />
+          <NavWrapper />
         </div>
       </header>
       <main className="flex min-h-[60vh] items-center justify-center px-6 py-32 text-center">

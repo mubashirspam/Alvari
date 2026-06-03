@@ -1,6 +1,5 @@
-import { CategoryNav } from "@/components/layout/category-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteNav } from "@/components/layout/site-nav";
+import { NavWrapper } from "@/components/layout/nav-wrapper";
 import { HeaderWrapper } from "@/components/layout/header-wrapper";
 import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { EnquiryCtaSection } from "@/features/landing/enquiry-cta-section";
@@ -29,14 +28,11 @@ export default async function HomePage() {
     <>
       <header className="fixed inset-x-0 top-0 z-50">
         <PromoStrip />
-        <div className="flex justify-center px-3 pt-3 md:px-5 md:pt-4">
-          <HeaderWrapper>
-            <SiteNav variant="clubbed" />
-            <CategoryNav variant="clubbed" />
-          </HeaderWrapper>
-        </div>
+        <HeaderWrapper>
+          <NavWrapper variant="clubbed" />
+        </HeaderWrapper>
       </header>
-      <main className="pt-36 md:pt-40">
+      <main className="pt-28">
         <HeroBanner />
         <TrustStrip />
         <ShopByCategory />

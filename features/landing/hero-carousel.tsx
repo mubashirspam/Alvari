@@ -12,7 +12,12 @@ type Props = {
   intervalMs?: number;
 };
 
-export function HeroCarousel({ banners, intervalMs = 4500 }: Props) {
+const FALLBACK_OVERLINE = "ALVARI WORKSHOP · WAYANAD";
+const FALLBACK_TITLE = "Crafted for\nKerala Homes";
+const FALLBACK_SUBTITLE =
+  "Premium solid-wood furniture built in our Wayanad workshop, delivered across Kerala.";
+
+export function HeroCarousel({ banners, intervalMs = 5000 }: Props) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -24,109 +29,119 @@ export function HeroCarousel({ banners, intervalMs = 4500 }: Props) {
   }, [banners.length, intervalMs]);
 
   if (banners.length === 0) return null;
-  const active = banners[index];
 
   return (
-    <section className="relative bg-[var(--color-bg)] md:p-5">
-      <div
-        className="relative w-full overflow-hidden md:rounded-[24px]"
-        style={{
-          background: active.bgColor ?? "#0d1730",
-          color: active.textColor ?? "#ffffff",
-        }}
-      >
-        <div className="relative aspect-[16/9] w-full md:aspect-auto md:h-[600px] lg:h-[680px]">
-          {banners.map((banner, i) => {
-            const desktopSrc = buildImageKitUrl(banner.imageKey, {
-              width: 2000,
-              quality: 80,
-              format: "auto",
-            });
-            const mobileSrc = banner.mobileImageKey
-              ? buildImageKitUrl(banner.mobileImageKey, {
-                  width: 900,
-                  quality: 80,
-                  format: "auto",
-                })
-              : desktopSrc;
-            const isActive = i === index;
-            return (
+    <section className="flex flex-col md:flex-row md:min-h-[580px] lg:min-h-[640px]">
+      {/* Mobile image – shown above content on small screens */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden md:hidden">
+        {banners.map((banner, i) => {
+          const src = banner.mobileImageKey
+            ? buildImageKitUrl(banner.mobileImageKey, { width: 900, quality: 80, format: "auto" })
+            : buildImageKitUrl(banner.imageKey, { width: 900, quality: 80, format: "auto" });
+          return (
+            <div
+              key={banner.id}
+              className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+              style={{ opacity: i === index ? 1 : 0 }}
+              aria-hidden={i !== index}
+            >
+              <Image
+                src={src}
+                alt={banner.title ?? "Hero"}
+                fill
+                priority={i === 0}
+                sizes="100vw"
+                className="object-cover"
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Left 1/3 – content panel */}
+      <div className="relative flex flex-col justify-between bg-[var(--color-bg)] px-8 py-12 md:w-1/3 md:px-14 md:py-16">
+
+        {/* Cross-fading banner content */}
+        <div className="relative flex-1">
+          <div className="grid grid-cols-1">
+            {banners.map((banner, i) => (
               <div
                 key={banner.id}
-                className="absolute inset-0 transition-opacity duration-1000 ease-[cubic-bezier(0.76,0,0.24,1)]"
-                style={{ opacity: isActive ? 1 : 0 }}
-                aria-hidden={!isActive}
+                className="[grid-area:1/1] flex flex-col justify-center transition-opacity duration-700 ease-in-out"
+                style={{
+                  opacity: i === index ? 1 : 0,
+                  pointerEvents: i === index ? "auto" : "none",
+                }}
               >
-                <Image
-                  src={mobileSrc}
-                  alt={banner.title ?? "Hero"}
-                  fill
-                  priority={i === 0}
-                  sizes="(min-width: 768px) 0vw, 100vw"
-                  className="object-contain object-center md:hidden"
-                />
-                <Image
-                  src={desktopSrc}
-                  alt={banner.title ?? "Hero"}
-                  fill
-                  priority={i === 0}
-                  sizes="(min-width: 768px) 100vw, 0vw"
-                  className="hidden object-cover md:block"
-                />
-              </div>
-            );
-          })}
+                {/* Overline */}
+                <p className="mb-6 text-[10px] font-semibold uppercase tracking-[0.32em] text-[var(--color-muted)]">
+                  {banner.overline ?? FALLBACK_OVERLINE}
+                </p>
 
-          {(active.title || active.subtitle || active.ctaLabel) && (
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d1730]/80 via-[#0d1730]/25 to-transparent" />
-          )}
+                {/* Title */}
+                <h1 className="font-serif text-[clamp(34px,3.8vw,62px)] font-normal leading-[1.04] tracking-[-0.025em] text-[var(--color-ink)]">
+                  {banner.title
+                    ? banner.title
+                    : FALLBACK_TITLE.split("\n").map((line, j) => (
+                        <span key={j} className="block">
+                          {line}
+                        </span>
+                      ))}
+                </h1>
 
-          <div className="relative z-10 flex h-full w-full flex-col justify-end px-6 pb-12 md:px-14 md:pb-16 lg:px-20 lg:pb-20">
-            {active.overline ? (
-              <p className="mb-4 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.22em] opacity-90 md:text-[12px]">
-                <span className="h-px w-8 bg-[var(--color-accent)]" />
-                {active.overline}
-              </p>
-            ) : null}
-            {active.title ? (
-              <h1 className="max-w-[640px] font-serif text-[clamp(40px,7vw,82px)] font-normal leading-[0.98] tracking-[-0.02em]">
-                {active.title}
-              </h1>
-            ) : null}
-            {active.subtitle ? (
-              <p className="mt-5 max-w-[520px] text-[15px] leading-[1.65] opacity-90 md:text-[16px]">
-                {active.subtitle}
-              </p>
-            ) : null}
-            {active.ctaLabel && active.ctaUrl ? (
-              <div className="mt-8">
-                <Link
-                  href={active.ctaUrl}
-                  className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--color-navy-deep)] shadow-lg shadow-black/20 transition-all duration-300 hover:bg-[var(--color-accent-warm)]"
-                >
-                  {active.ctaLabel}
-                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                </Link>
+                {/* Subtitle */}
+                <p className="mt-6 text-[13px] leading-[1.85] tracking-[0.01em] text-[var(--color-muted)]">
+                  {banner.subtitle ?? FALLBACK_SUBTITLE}
+                </p>
               </div>
-            ) : null}
+            ))}
           </div>
-
-          {banners.length > 1 ? (
-            <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 md:bottom-7">
-              {banners.map((b, i) => (
-                <button
-                  key={b.id}
-                  type="button"
-                  onClick={() => setIndex(i)}
-                  aria-label={`Go to slide ${i + 1}`}
-                  className={`h-1.5 rounded-full transition-all ${
-                    i === index ? "w-8 bg-[var(--color-accent)] opacity-100" : "w-4 bg-current opacity-40"
-                  }`}
-                />
-              ))}
-            </div>
-          ) : null}
         </div>
+
+        {/* CTA — always visible, below the fading content */}
+        <div className="mt-12 md:mt-14">
+          {/* Thin rule */}
+          <div className="mb-8 h-px w-12 bg-[var(--color-accent)]" />
+
+          <Link
+            href={banners[index]?.ctaUrl ?? "/products"}
+            className="group inline-flex items-center gap-4 border border-[var(--color-ink)] px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--color-ink)] transition-all duration-300 hover:bg-[var(--color-ink)] hover:text-[var(--color-bg)]"
+          >
+            {banners[index]?.ctaLabel ?? "Explore Collection"}
+            <ArrowRight
+              className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1"
+              strokeWidth={2}
+            />
+          </Link>
+        </div>
+      </div>
+
+      {/* Right 2/3 – image panel (desktop only) */}
+      <div className="relative hidden overflow-hidden md:block md:w-2/3">
+        {banners.map((banner, i) => {
+          const src = buildImageKitUrl(banner.imageKey, {
+            width: 2000,
+            quality: 80,
+            format: "auto",
+          });
+          return (
+            <div
+              key={banner.id}
+              className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+              style={{ opacity: i === index ? 1 : 0 }}
+              aria-hidden={i !== index}
+            >
+              <Image
+                src={src}
+                alt={banner.title ?? "Hero"}
+                fill
+                priority={i === 0}
+                sizes="66vw"
+                className="object-cover"
+              />
+            </div>
+          );
+        })}
       </div>
     </section>
   );

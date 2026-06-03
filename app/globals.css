@@ -11,7 +11,7 @@
   --color-accent-warm: #ffa04a;
   --color-line: rgb(11 23 31 / 0.1);
 
-  --font-serif: var(--font-dm-serif), Georgia, serif;
+  --font-serif: var(--font-montserrat), ui-sans-serif, sans-serif;
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
 
   --ease-alvari: cubic-bezier(0.76, 0, 0.24, 1);

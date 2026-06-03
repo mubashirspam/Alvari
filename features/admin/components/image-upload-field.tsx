@@ -18,6 +18,8 @@ type Props = {
   required?: boolean;
   /** Tailwind aspect class for the preview box. */
   aspectClass?: string;
+  /** Called with the new filePath after a successful upload, or "" when removed. */
+  onChange?: (path: string) => void;
 };
 
 /**
@@ -33,6 +35,7 @@ export function ImageUploadField({
   hint,
   required = false,
   aspectClass = "aspect-[16/9]",
+  onChange,
 }: Props) {
   const [value, setValue] = useState(defaultValue ?? "");
   const [uploading, setUploading] = useState(false);
@@ -50,6 +53,7 @@ export function ImageUploadField({
     try {
       const { filePath, sizeKb } = await uploadImageToImageKit(file, folder, setProgress);
       setValue(filePath);
+      onChange?.(filePath);
       setInfo(`Uploaded · ${sizeKb} KB`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
@@ -82,6 +86,7 @@ export function ImageUploadField({
                 onClick={() => {
                   setValue("");
                   setInfo(null);
+                  onChange?.("");
                 }}
                 aria-label="Remove image"
                 className="absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-ink)]/80 text-[var(--color-bg)] backdrop-blur transition hover:bg-[var(--color-ink)]"

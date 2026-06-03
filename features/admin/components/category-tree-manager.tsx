@@ -249,6 +249,7 @@ function NodeForm({
   const isEdit = Boolean(node);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageKey, setImageKey] = useState(node?.imageKey ?? "");
   const defaultParent = isEdit ? (node?.parentId ?? "") : (parentId ?? "");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -258,7 +259,7 @@ function NodeForm({
       name: String(fd.get("name") ?? "").trim(),
       slug: String(fd.get("slug") ?? "").trim(),
       parentId: (fd.get("parentId") as string) || null,
-      imageKey: (fd.get("imageKey") as string) || null,
+      imageKey: imageKey || null,
       accentColor: (fd.get("accentColor") as string) || null,
       linkCategory: (fd.get("linkCategory") as string) || null,
       material: (fd.get("material") as string) || null,
@@ -337,6 +338,7 @@ function NodeForm({
         defaultValue={node?.imageKey ?? ""}
         aspectClass="aspect-square"
         hint="Square works best. Auto-optimised to under 300 KB."
+        onChange={setImageKey}
       />
 
       <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-bg)] p-4">
