@@ -11,9 +11,20 @@ import {
 } from "@/features/category-tree/types";
 import { buildImageKitUrl } from "@/lib/imagekit";
 
-type Props = { tree: CategoryTreeNode[] };
+type Props = {
+  tree: CategoryTreeNode[];
+  overline?: string | null;
+  title?: string | null;
+  /** Override the outer <section> classes (padding/background). */
+  className?: string;
+};
 
-export function CategoryBrowser({ tree }: Props) {
+export function CategoryBrowser({
+  tree,
+  overline = "Shop by category",
+  title = "Shop all things home",
+  className = "bg-[var(--color-bg)] py-14 md:py-20",
+}: Props) {
   const router = useRouter();
   const [rootId, setRootId] = useState<string>(tree[0]?.id ?? "");
   const [subId, setSubId] = useState<string>("");
@@ -57,16 +68,22 @@ export function CategoryBrowser({ tree }: Props) {
   if (!activeRoot) return null;
 
   return (
-    <section className="bg-[var(--color-bg)] py-14 md:py-20">
+    <section className={className}>
       <div className="mx-auto max-w-[1400px] px-6 md:px-12">
-        <div className="mb-8 text-center md:mb-10">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--color-accent)]">
-            Shop by category
-          </p>
-          <h2 className="font-serif text-[clamp(28px,4vw,44px)] leading-[1.1] tracking-[-0.02em] text-[var(--color-ink)]">
-            Shop all things home
-          </h2>
-        </div>
+        {overline || title ? (
+          <div className="mb-8 text-center md:mb-10">
+            {overline ? (
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--color-accent)]">
+                {overline}
+              </p>
+            ) : null}
+            {title ? (
+              <h2 className="font-serif text-[clamp(28px,4vw,44px)] leading-[1.1] tracking-[-0.02em] text-[var(--color-ink)]">
+                {title}
+              </h2>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* Top-level tabs (underline indicator) */}
         <div className="mb-7 flex flex-wrap justify-center gap-x-6 gap-y-1 border-b border-[var(--color-line)] md:gap-x-10">

@@ -7,8 +7,10 @@ import { HeaderWrapper } from "@/components/layout/header-wrapper";
 import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { JsonLd } from "@/components/seo/json-ld";
 import { PromoStrip } from "@/features/landing/promo-strip";
+import { CategoryBrowser } from "@/features/landing/category-browser";
 import { ProductCard } from "@/features/products/components/product-card";
 import { getAllProducts } from "@/features/products/services/product-service";
+import { getVisibleTree } from "@/features/category-tree/services/category-tree-service";
 import { CATEGORY_LABEL, type ProductCategory } from "@/features/products/types";
 import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 
@@ -52,12 +54,17 @@ export default async function ProductsPage({
   ) as ProductCategory | null;
   const activeMaterial = material?.trim().toLowerCase() || null;
 
-  const products = await getAllProducts();
+  const [products, tree] = await Promise.all([
+    getAllProducts(),
+    getVisibleTree(),
+  ]);
   const filtered = products.filter(
     (p) =>
       (!activeCategory || p.category === activeCategory) &&
       (!activeMaterial || p.material?.toLowerCase().includes(activeMaterial)),
   );
+
+  const activeLabel = activeCategory ? CATEGORY_LABEL[activeCategory] : null;
 
   const categories = Object.entries(CATEGORY_LABEL) as [
     ProductCategory,
@@ -102,35 +109,64 @@ export default async function ProductsPage({
           </h1>
         </section>
 
-        <section className="mx-auto max-w-[1200px] px-6 pb-10 md:px-12">
-          <div className="flex flex-wrap gap-2 border-b border-[var(--color-line)] pb-6">
-            <Link
-              href="/products"
-              className={`rounded-full border px-4 py-2 text-[13px] transition-colors ${
-                !activeCategory
-                  ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-[var(--color-bg)]"
-                  : "border-[var(--color-line)] text-[var(--color-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-ink)]"
-              }`}
-            >
-              All
-            </Link>
-            {categories.map(([value, label]) => (
+        {tree.length > 0 ? (
+          <CategoryBrowser
+            tree={tree}
+            overline="Browse by category"
+            title={null}
+            className="border-b border-[var(--color-line)] bg-[var(--color-bg)] pb-12"
+          />
+        ) : (
+          <section className="mx-auto max-w-[1200px] px-6 pb-10 md:px-12">
+            <div className="flex flex-wrap gap-2 border-b border-[var(--color-line)] pb-6">
               <Link
-                key={value}
-                href={`/products?category=${value}`}
+                href="/products"
                 className={`rounded-full border px-4 py-2 text-[13px] transition-colors ${
-                  activeCategory === value
+                  !activeCategory
                     ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-[var(--color-bg)]"
                     : "border-[var(--color-line)] text-[var(--color-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-ink)]"
                 }`}
               >
-                {label}
+                All
               </Link>
-            ))}
-          </div>
-        </section>
+              {categories.map(([value, label]) => (
+                <Link
+                  key={value}
+                  href={`/products?category=${value}`}
+                  className={`rounded-full border px-4 py-2 text-[13px] transition-colors ${
+                    activeCategory === value
+                      ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-[var(--color-bg)]"
+                      : "border-[var(--color-line)] text-[var(--color-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-ink)]"
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <section className="mx-auto max-w-[1200px] px-6 pb-30 md:px-12">
+        <section className="mx-auto max-w-[1200px] px-6 pb-30 pt-10 md:px-12">
+          {activeCategory || activeMaterial ? (
+            <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
+              <span className="text-[var(--color-muted)]">
+                Showing{" "}
+                <span className="font-medium text-[var(--color-ink)]">
+                  {activeLabel ?? "all"}
+                </span>
+                {activeMaterial ? (
+                  <span className="text-[var(--color-ink)]"> · {activeMaterial}</span>
+                ) : null}
+                {" "}({filtered.length})
+              </span>
+              <Link
+                href="/products"
+                className="rounded-full border border-[var(--color-line)] px-3 py-1 text-[12px] text-[var(--color-muted)] transition hover:border-[var(--color-accent)] hover:text-[var(--color-ink)]"
+              >
+                Clear ✕
+              </Link>
+            </div>
+          ) : null}
           {filtered.length === 0 ? (
             <p className="py-20 text-center text-[var(--color-muted)]">
               No products match this filter yet.
