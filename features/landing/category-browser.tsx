@@ -85,8 +85,8 @@ export function CategoryBrowser({
           </div>
         ) : null}
 
-        {/* Top-level tabs (underline indicator) */}
-        <div className="mb-7 flex flex-wrap justify-center gap-x-6 gap-y-1 border-b border-[var(--color-line)] md:gap-x-10">
+        {/* Top-level tabs (underline indicator) — scrolls horizontally on mobile */}
+        <div className="mb-7 -mx-6 flex gap-x-6 overflow-x-auto border-b border-[var(--color-line)] px-6 [scrollbar-width:none] md:mx-0 md:justify-center md:gap-x-10 md:px-0 [&::-webkit-scrollbar]:hidden">
           {tree.map((root) => {
             const active = root.id === activeRoot.id;
             return (
@@ -94,7 +94,7 @@ export function CategoryBrowser({
                 key={root.id}
                 type="button"
                 onClick={() => selectRoot(root.id)}
-                className={`relative -mb-px px-2 pb-3 text-[15px] font-medium transition-colors md:text-[16px] ${
+                className={`relative -mb-px shrink-0 whitespace-nowrap px-1 pb-3 text-[15px] font-medium transition-colors md:px-2 md:text-[16px] ${
                   active
                     ? "text-[var(--color-accent)]"
                     : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
@@ -109,9 +109,9 @@ export function CategoryBrowser({
           })}
         </div>
 
-        {/* Second-level pills */}
+        {/* Second-level pills — scrolls horizontally on mobile */}
         {hasThirdLevel ? (
-          <div className="mb-9 flex flex-wrap justify-center gap-2.5">
+          <div className="mb-9 -mx-6 flex gap-2.5 overflow-x-auto px-6 [scrollbar-width:none] md:mx-0 md:flex-wrap md:justify-center md:px-0 [&::-webkit-scrollbar]:hidden">
             {subCats.map((sub) => {
               const active = sub.id === activeSub?.id;
               return (
@@ -119,7 +119,7 @@ export function CategoryBrowser({
                   key={sub.id}
                   type="button"
                   onClick={() => setSubId(sub.id)}
-                  className={`rounded-full border px-5 py-2 text-[13.5px] font-medium transition ${
+                  className={`shrink-0 whitespace-nowrap rounded-full border px-5 py-2 text-[13.5px] font-medium transition ${
                     active
                       ? "border-[var(--color-accent)] text-[var(--color-accent)]"
                       : "border-[var(--color-line)] text-[var(--color-ink)] hover:border-[var(--color-ink)]"
