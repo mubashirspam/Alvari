@@ -1,22 +1,42 @@
-import { Banknote, Truck, ShieldCheck } from "lucide-react";
+import { PackageCheck, ShieldCheck, Star, TreePine } from "lucide-react";
 
 const ITEMS = [
-  { Icon: Banknote, label: "No-cost EMI with leading banks" },
-  { Icon: Truck, label: "Free delivery & installation across Kerala" },
-  { Icon: ShieldCheck, label: "Factory-direct prices · 7-day returns" },
+  {
+    Icon: Star,
+    title: "4.8 / 5 Rated",
+    subtitle: "Loved by 5,000+ families",
+  },
+  {
+    Icon: PackageCheck,
+    title: "10,000+ Delivered",
+    subtitle: "Pieces in Kerala homes",
+  },
+  {
+    Icon: TreePine,
+    title: "Premium Solid Wood",
+    subtitle: "Furniture-grade timber",
+  },
+  {
+    Icon: ShieldCheck,
+    title: "Up to 10-Year Warranty",
+    subtitle: "On every handcrafted piece",
+  },
 ] as const;
 
 export function TrustStrip() {
   return (
     <section className="border-y border-[var(--color-line)] bg-[var(--color-bg)]">
-      <div className="mx-auto grid max-w-[1400px] grid-cols-1 divide-y divide-[var(--color-line)] md:grid-cols-3 md:divide-x md:divide-y-0">
-        {ITEMS.map(({ Icon, label }) => (
+      <div className="mx-auto grid max-w-[1400px] grid-cols-2 divide-x divide-y divide-[var(--color-line)] md:grid-cols-4 md:divide-y-0">
+        {ITEMS.map(({ Icon, title, subtitle }) => (
           <div
-            key={label}
-            className="flex items-center justify-center gap-3 px-6 py-4 text-[13px] text-[var(--color-ink)] md:py-5 md:text-[14px]"
+            key={title}
+            className="flex flex-col items-center justify-center gap-2 px-4 py-7 text-center md:py-9"
           >
-            <Icon className="h-4 w-4 text-[var(--color-accent)]" />
-            <span>{label}</span>
+            <Icon className="h-6 w-6 text-[var(--color-ink)]" strokeWidth={1.4} />
+            <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[var(--color-ink)] md:text-[13px]">
+              {title}
+            </p>
+            <p className="text-[12px] text-[var(--color-muted)]">{subtitle}</p>
           </div>
         ))}
       </div>
