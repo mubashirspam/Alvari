@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AdminShell } from "@/features/admin/components/admin-shell";
-import { neonAuth } from "@/lib/auth/neon-auth";
+import { getCurrentAdmin } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Admin · Alvari" };
@@ -10,18 +10,15 @@ export default async function AdminDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session } = await neonAuth.getSession();
-
-  type AuthUser = NonNullable<typeof session>["user"] & { role?: string | null };
-  const user = session?.user as AuthUser | undefined;
-  if (!user || user.role !== "admin") {
+  // Dual auth: accept a Neon Auth session or the legacy DB-backed admin cookie —
+  // the same check every server action / API route uses via requireAdmin().
+  const admin = await getCurrentAdmin();
+  if (!admin) {
     redirect("/admin/login");
   }
 
   return (
-    <AdminShell
-      admin={{ email: user.email, name: user.name ?? null }}
-    >
+    <AdminShell admin={{ email: admin.email, name: admin.name ?? null }}>
       {children}
     </AdminShell>
   );

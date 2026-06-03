@@ -1,11 +1,23 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { neonAuth } from "@/lib/auth/neon-auth";
 import { envMode } from "@/lib/env";
+import { SESSION_COOKIE } from "@/lib/auth/constants";
 
 const authProxy = neonAuth.middleware({ loginUrl: "/admin/login" });
 
 const BASIC_AUTH_REALM = "Alvari staging";
 const BYPASS_PATHS = ["/api/cron", "/api/auth", "/admin/login", "/admin/setup"];
+
+/**
+ * True when the request carries either auth credential we accept: a Neon Auth
+ * session token cookie or the legacy DB-backed admin session cookie. The proxy
+ * is only the first gate — the page layout and every server action / API route
+ * call `requireAdmin()`, which fully validates whichever session is present.
+ */
+function hasAdminSessionCookie(request: NextRequest): boolean {
+  if (request.cookies.has(SESSION_COOKIE)) return true;
+  return request.cookies.getAll().some((c) => c.name.includes("session_token"));
+}
 
 function basicAuthChallenge(): NextResponse {
   return new NextResponse("Authentication required", {
@@ -54,6 +66,16 @@ export async function proxy(request: NextRequest) {
   if (isAdminRoute && !isPublicAdminRoute) {
     const authResponse = await authProxy(request);
     if (authResponse) {
+      const isRedirect = authResponse.status >= 300 && authResponse.status < 400;
+      // Neon Auth wants to bounce to /admin/login. If the request already carries
+      // a session cookie (Neon or legacy), don't hard-redirect — that breaks Next
+      // server actions with "An unexpected response was received from the server".
+      // Let it through and let requireAdmin()/the layout do the real validation.
+      if (isRedirect && hasAdminSessionCookie(request)) {
+        const passthrough = NextResponse.next();
+        if (mode !== "production") applyNonProdHeaders(passthrough, mode);
+        return passthrough;
+      }
       if (mode !== "production") applyNonProdHeaders(authResponse, mode);
       return authResponse;
     }
