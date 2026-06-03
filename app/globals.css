@@ -1,13 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #f0efeb;
-  --color-bg-soft: #ede4d7;
-  --color-ink: #2F3027;
-  --color-muted: #7a6555;
-  --color-accent: #8b4513;
-  --color-accent-warm: #d98d5e;
-  --color-line: rgb(42 26 16 / 0.12);
+  /* ALVARI brand palette — orange primary on near-black ink */
+  --color-bg: #ffffff;
+  --color-bg-soft: #f3f4f7;
+  --color-ink: #0b171f;
+  --color-navy-deep: #0b171f;
+  --color-muted: #5d6873;
+  --color-accent: #ff8d28;
+  --color-accent-warm: #ffa04a;
+  --color-line: rgb(11 23 31 / 0.1);
 
   --font-serif: var(--font-dm-serif), Georgia, serif;
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
@@ -15,21 +17,23 @@
   --ease-alvari: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
-html {
-  scroll-behavior: smooth;
-}
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
 
-body {
-  background: var(--color-bg);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 @keyframes fade-up {

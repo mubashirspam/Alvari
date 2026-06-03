@@ -166,7 +166,7 @@ export function CartDrawer() {
             <Link
               href="/checkout"
               onClick={close}
-              className="block w-full rounded-full bg-[var(--color-ink)] py-3.5 text-center text-[13px] font-medium uppercase tracking-[0.12em] text-[var(--color-bg)] transition-colors hover:bg-[var(--color-accent)]"
+              className="block w-full rounded-full bg-[var(--color-accent)] py-3.5 text-center text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--color-navy-deep)] transition-colors hover:bg-[var(--color-accent-warm)]"
             >
               Request quote
             </Link>

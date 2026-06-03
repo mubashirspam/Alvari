@@ -12,25 +12,25 @@ const customers: Customer[] = [
     initials: "SH",
     name: "Sajid Hussain",
     role: "Retail owner, Kochi",
-    tint: "bg-[#e8c468]",
+    tint: "bg-[#ef9d28]",
   },
   {
     initials: "PN",
     name: "Priya Nair",
     role: "Homemaker, Thrissur",
-    tint: "bg-[#d98d5e]",
+    tint: "bg-[#14223e]",
   },
   {
     initials: "MT",
     name: "Meera Thomas",
     role: "Architect, Ernakulam",
-    tint: "bg-[#8b4513]",
+    tint: "bg-[#5a647a]",
   },
   {
     initials: "JK",
     name: "Jacob Kurien",
     role: "Hotelier, Kumarakom",
-    tint: "bg-[#4a6b4a]",
+    tint: "bg-[#f7b94c]",
   },
 ];
 
@@ -75,13 +75,13 @@ export function TestimonialSection() {
             delay={2}
             className="relative flex flex-col justify-between overflow-hidden rounded-2xl bg-[var(--color-bg-soft)] p-8 md:p-12 lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:gap-10"
           >
-            <div className="relative hidden aspect-[3/4] overflow-hidden rounded-xl bg-gradient-to-br from-[#8b4513] via-[#6b3410] to-[#2a1a10] lg:block">
+            <div className="relative hidden aspect-[3/4] overflow-hidden rounded-xl bg-gradient-to-br from-[#1c2e54] via-[#14223e] to-[#0d1730] lg:block">
               <div
                 aria-hidden
-                className="absolute inset-0 opacity-30"
+                className="absolute inset-0 opacity-40"
                 style={{
                   backgroundImage:
-                    "radial-gradient(circle at 30% 20%, rgba(217,141,94,0.6), transparent 55%), radial-gradient(circle at 70% 80%, rgba(245,239,230,0.35), transparent 50%)",
+                    "radial-gradient(circle at 30% 20%, rgba(239,157,40,0.55), transparent 55%), radial-gradient(circle at 70% 80%, rgba(247,185,76,0.3), transparent 50%)",
                 }}
               />
               <span className="absolute bottom-5 left-5 font-serif text-[64px] leading-none text-[var(--color-bg)]/90">

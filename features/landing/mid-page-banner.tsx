@@ -19,7 +19,7 @@ export async function MidPageBanner() {
       <div className="mx-auto max-w-[1400px] px-6 md:px-12">
         <div
           className="relative overflow-hidden rounded-[20px] text-white"
-          style={{ background: banner.bgColor ?? "#3a2916" }}
+          style={{ background: banner.bgColor ?? "#14223e" }}
         >
           <div className="relative h-[300px] md:h-[360px] lg:h-[420px]">
             <Image

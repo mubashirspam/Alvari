@@ -6,6 +6,7 @@ import { Menu, X, MessageCircle, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/env";
 import { CartButton } from "@/features/cart/components/cart-button";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 const links = [
   { href: "/products", label: "Shop" },
@@ -49,12 +50,10 @@ export function SiteNav({ variant = "standalone" }: { variant?: "standalone" | "
     >
       <Link
         href="/"
-        className="pl-3 pr-2 font-serif text-[20px] leading-none tracking-tight text-[var(--color-ink)] transition-colors"
+        aria-label="Alvari — home"
+        className="flex items-center pl-3 pr-2 text-[var(--color-ink)] transition-colors"
       >
-        Alvari
-        <em className="not-italic italic text-[var(--color-accent)]">
-          .
-        </em>
+        <BrandLogo height={22} />
       </Link>
 
       <ul className="hidden items-center md:flex">
@@ -81,7 +80,7 @@ export function SiteNav({ variant = "standalone" }: { variant?: "standalone" | "
         <CartButton className="h-9 w-9" />
         <button
           onClick={() => window.open(`https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent("Hi Alvari, I'd like to know more about your furniture")}`, "_blank")}
-          className="hidden items-center gap-1.5 rounded-full bg-[var(--color-ink)] px-4 py-2 text-[13px] font-medium text-[var(--color-bg)] transition-all duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] hover:bg-[var(--color-accent)] md:inline-flex cursor-pointer"
+          className="hidden items-center gap-1.5 rounded-full bg-[var(--color-accent)] px-4 py-2 text-[13px] font-semibold text-[var(--color-navy-deep)] transition-all duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] hover:bg-[var(--color-accent-warm)] md:inline-flex cursor-pointer"
         >
           <MessageCircle className="h-3.5 w-3.5" strokeWidth={2} />
           Connect Us
@@ -119,7 +118,7 @@ export function SiteNav({ variant = "standalone" }: { variant?: "standalone" | "
               window.open(`https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent("Hi Alvari, I'd like to know more about your furniture")}`, "_blank");
               setOpen(false);
             }}
-            className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--color-ink)] px-5 py-3 text-center text-sm font-medium text-[var(--color-bg)] cursor-pointer"
+            className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--color-accent)] px-5 py-3 text-center text-sm font-semibold text-[var(--color-navy-deep)] cursor-pointer"
           >
             <MessageCircle className="h-4 w-4" strokeWidth={2} />
             Connect Us

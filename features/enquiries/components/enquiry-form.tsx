@@ -158,7 +158,7 @@ export function EnquiryForm({
       <button
         type="submit"
         disabled={status.kind === "submitting"}
-        className="mt-2 w-full rounded-full bg-[var(--color-ink)] px-8 py-4 text-sm uppercase tracking-[0.06em] text-[var(--color-bg)] transition-all duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] hover:bg-[var(--color-accent)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-2 w-full rounded-full bg-[var(--color-accent)] px-8 py-4 text-sm font-semibold uppercase tracking-[0.06em] text-[var(--color-navy-deep)] transition-all duration-300 ease-[cubic-bezier(0.76,0,0.24,1)] hover:bg-[var(--color-accent-warm)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {status.kind === "submitting" ? "Sending…" : "Send Enquiry →"}
       </button>

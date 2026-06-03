@@ -61,7 +61,7 @@ export function AddToCartButton({
     <button
       type="button"
       onClick={handleAdd}
-      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-ink)] px-7 py-3.5 text-[13px] font-medium uppercase tracking-[0.12em] text-[var(--color-bg)] transition-colors hover:bg-[var(--color-accent)] ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-accent)] px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--color-navy-deep)] transition-colors hover:bg-[var(--color-accent-warm)] ${className}`}
     >
       <ShoppingBag className="h-4 w-4" />
       {label ?? "Add to quotation"}

@@ -31,8 +31,8 @@ export function HeroCarousel({ banners, intervalMs = 4500 }: Props) {
       <div
         className="relative w-full overflow-hidden md:rounded-[24px]"
         style={{
-          background: active.bgColor ?? "#1a1a14",
-          color: active.textColor ?? "#fdf6e8",
+          background: active.bgColor ?? "#0d1730",
+          color: active.textColor ?? "#ffffff",
         }}
       >
         <div className="relative aspect-[16/9] w-full md:aspect-auto md:h-[600px] lg:h-[680px]">
@@ -78,12 +78,13 @@ export function HeroCarousel({ banners, intervalMs = 4500 }: Props) {
           })}
 
           {(active.title || active.subtitle || active.ctaLabel) && (
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d1730]/80 via-[#0d1730]/25 to-transparent" />
           )}
 
           <div className="relative z-10 flex h-full w-full flex-col justify-end px-6 pb-12 md:px-14 md:pb-16 lg:px-20 lg:pb-20">
             {active.overline ? (
-              <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.22em] opacity-85 md:text-[12px]">
+              <p className="mb-4 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.22em] opacity-90 md:text-[12px]">
+                <span className="h-px w-8 bg-[var(--color-accent)]" />
                 {active.overline}
               </p>
             ) : null}
@@ -101,10 +102,10 @@ export function HeroCarousel({ banners, intervalMs = 4500 }: Props) {
               <div className="mt-8">
                 <Link
                   href={active.ctaUrl}
-                  className="inline-flex items-center gap-2 rounded-full border border-current/40 bg-white/10 px-7 py-3 text-[13px] font-medium uppercase tracking-[0.12em] backdrop-blur-sm transition hover:bg-white/20"
+                  className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--color-navy-deep)] shadow-lg shadow-black/20 transition-all duration-300 hover:bg-[var(--color-accent-warm)]"
                 >
                   {active.ctaLabel}
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </Link>
               </div>
             ) : null}
@@ -119,7 +120,7 @@ export function HeroCarousel({ banners, intervalMs = 4500 }: Props) {
                   onClick={() => setIndex(i)}
                   aria-label={`Go to slide ${i + 1}`}
                   className={`h-1.5 rounded-full transition-all ${
-                    i === index ? "w-8 bg-current opacity-95" : "w-4 bg-current opacity-40"
+                    i === index ? "w-8 bg-[var(--color-accent)] opacity-100" : "w-4 bg-current opacity-40"
                   }`}
                 />
               ))}

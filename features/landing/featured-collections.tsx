@@ -40,7 +40,7 @@ export async function FeaturedCollections() {
                   href={`/collections/${collection.slug}`}
                   className="group relative aspect-[4/5] overflow-hidden rounded-[18px] md:col-span-7 md:aspect-auto md:min-h-[480px]"
                   style={{
-                    background: collection.accentColor ?? "#5e3b18",
+                    background: collection.accentColor ?? "#14223e",
                   }}
                 >
                   {heroImage ? (

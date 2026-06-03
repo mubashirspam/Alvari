@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, MessageCircle, Phone } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 import { siteConfig } from "@/lib/env";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
@@ -66,10 +67,8 @@ export function SiteFooter() {
         <div className="grid gap-10 rounded-3xl border border-white/10 bg-white/[0.02] p-6 md:p-10 lg:grid-cols-[1.1fr_1fr]">
           <div className="flex flex-col justify-between gap-6">
             <div>
-              <Link href="/" className="inline-flex items-baseline gap-1">
-                <span className="font-serif text-[22px] leading-none">
-                  &copy; Alvari 26
-                </span>
+              <Link href="/" aria-label="Alvari — home" className="inline-flex text-[var(--color-bg)]">
+                <BrandLogo height={28} />
               </Link>
               <p className="mt-4 max-w-[320px] text-[14px] leading-[1.6] text-[var(--color-bg)]/60">
                 Factory-direct furniture from our Wayanad workshop — wardrobes,
@@ -152,8 +151,8 @@ export function SiteFooter() {
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center overflow-hidden"
       >
-        <span className="translate-y-[22%] whitespace-nowrap font-serif text-[clamp(100px,22vw,280px)] leading-none tracking-[-0.04em] text-[var(--color-bg)]/[0.07] select-none">
-          Alvari Furniture
+        <span className="translate-y-[22%] whitespace-nowrap font-sans text-[clamp(90px,20vw,260px)] font-medium uppercase leading-none tracking-[0.06em] text-[var(--color-bg)]/[0.06] select-none">
+          Alvari
         </span>
       </div>
     </footer>
