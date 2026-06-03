@@ -6,6 +6,7 @@ export const cacheKeys = {
   blogPublished: "blog:published:v1",
   blogBySlug: (slug: string) => `blog:slug:v1:${slug}`,
   categoriesVisible: "categories:visible:v1",
+  categoryTree: "category-tree:visible:v1",
   bannersBySlot: (slot: string) => `banners:slot:v1:${slot}`,
   collectionsFeatured: "collections:featured:v1",
   collectionBySlug: (slug: string) => `collections:slug:v1:${slug}`,

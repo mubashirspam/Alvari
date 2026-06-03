@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   index,
   integer,
@@ -342,6 +343,42 @@ export const categories = pgTable(
   (table) => [index("categories_visible_idx").on(table.isVisible, table.sortOrder)],
 );
 
+/**
+ * Hierarchical navigation taxonomy (Furniture → Solid Wood → Almirah, …).
+ * Self-referencing tree, decoupled from `productCategoryEnum`. Leaf/any node may
+ * link to a filtered product listing via `linkCategory` (+ `material`) or an
+ * explicit `linkHref`. Deleting a node cascades to its whole subtree.
+ */
+export const categoryNodes = pgTable(
+  "category_nodes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    parentId: uuid("parent_id").references(
+      (): AnyPgColumn => categoryNodes.id,
+      { onDelete: "cascade" },
+    ),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    imageKey: text("image_key"),
+    accentColor: text("accent_color"),
+    linkCategory: productCategoryEnum("link_category"),
+    material: text("material"),
+    linkHref: text("link_href"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isVisible: boolean("is_visible").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("category_nodes_parent_idx").on(table.parentId),
+    index("category_nodes_visible_idx").on(table.isVisible, table.sortOrder),
+  ],
+);
+
 export const banners = pgTable(
   "banners",
   {
@@ -447,6 +484,8 @@ export const collectionProductsRelations = relations(
 
 export type CategoryRow = typeof categories.$inferSelect;
 export type NewCategoryRow = typeof categories.$inferInsert;
+export type CategoryNodeRow = typeof categoryNodes.$inferSelect;
+export type NewCategoryNodeRow = typeof categoryNodes.$inferInsert;
 export type BannerRow = typeof banners.$inferSelect;
 export type NewBannerRow = typeof banners.$inferInsert;
 export type CollectionRow = typeof collections.$inferSelect;

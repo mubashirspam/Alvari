@@ -1,9 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getVisibleCategories } from "@/features/categories/services/category-service";
+import { getVisibleTree } from "@/features/category-tree/services/category-tree-service";
 import { buildImageKitUrl } from "@/lib/imagekit";
+import { CategoryBrowser } from "./category-browser";
 
 export async function ShopByCategory() {
+  const tree = await getVisibleTree();
+
+  // Prefer the admin-managed hierarchy. Fall back to the flat category list so the
+  // homepage is never blank before the tree is seeded.
+  if (tree.length > 0) {
+    return <CategoryBrowser tree={tree} />;
+  }
+
   const categories = await getVisibleCategories();
   if (categories.length === 0) return null;
 
@@ -35,7 +45,7 @@ export async function ShopByCategory() {
               className="group flex flex-col items-center gap-3 text-center"
             >
               <div
-                className="relative aspect-square w-full overflow-hidden rounded-full"
+                className="relative aspect-square w-full overflow-hidden rounded-3xl"
                 style={{
                   background: c.accentColor
                     ? `linear-gradient(145deg, ${c.accentColor}22, ${c.accentColor}11)`

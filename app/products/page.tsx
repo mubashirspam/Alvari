@@ -14,14 +14,14 @@ import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
 
 export const revalidate = 60;
 
-type SearchParams = Promise<{ category?: string }>;
+type SearchParams = Promise<{ category?: string; material?: string }>;
 
 export async function generateMetadata({
   searchParams,
 }: {
   searchParams: SearchParams;
 }): Promise<Metadata> {
-  const { category } = await searchParams;
+  const { category, material } = await searchParams;
   const cat =
     category && category in CATEGORY_LABEL ? (category as ProductCategory) : null;
   const label = cat ? CATEGORY_LABEL[cat] : null;
@@ -29,10 +29,14 @@ export async function generateMetadata({
   const description = label
     ? `${label} built in our Wayanad workshop, delivered across Kerala. Factory prices, no middlemen.`
     : "Wardrobes, beds, sofas, dining sets, and complete room sets — built in Wayanad, delivered across Kerala at factory prices.";
+  const params = new URLSearchParams();
+  if (cat) params.set("category", cat);
+  if (material) params.set("material", material);
+  const qs = params.toString();
   return {
     title,
     description,
-    alternates: { canonical: cat ? `/products?category=${cat}` : "/products" },
+    alternates: { canonical: qs ? `/products?${qs}` : "/products" },
     openGraph: { title, description, type: "website" },
   };
 }
@@ -42,15 +46,18 @@ export default async function ProductsPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { category } = await searchParams;
+  const { category, material } = await searchParams;
   const activeCategory = (
     category && category in CATEGORY_LABEL ? category : null
   ) as ProductCategory | null;
+  const activeMaterial = material?.trim().toLowerCase() || null;
 
   const products = await getAllProducts();
-  const filtered = activeCategory
-    ? products.filter((p) => p.category === activeCategory)
-    : products;
+  const filtered = products.filter(
+    (p) =>
+      (!activeCategory || p.category === activeCategory) &&
+      (!activeMaterial || p.material?.toLowerCase().includes(activeMaterial)),
+  );
 
   const categories = Object.entries(CATEGORY_LABEL) as [
     ProductCategory,
