@@ -2,13 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
+import { ImageUploadField } from "@/features/admin/components/image-upload-field";
 import type { Category } from "@/features/categories/types";
 import { updateCategoryAction } from "@/app/admin/(dashboard)/categories/actions";
 
 export function CategoryRowForm({ category }: { category: Category }) {
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
-  const [preview, setPreview] = useState(category.imageKey ?? "");
 
   function handleSubmit(fd: FormData) {
     setStatus("idle");
@@ -25,18 +25,15 @@ export function CategoryRowForm({ category }: { category: Category }) {
   return (
     <form
       action={handleSubmit}
-      className="grid grid-cols-1 gap-3 rounded-xl border border-[var(--color-line)] p-4 md:grid-cols-[80px_1fr_1fr_1fr_120px_auto]"
+      className="grid grid-cols-1 items-start gap-3 rounded-xl border border-[var(--color-line)] p-4 md:grid-cols-[180px_1fr_1fr_100px_auto]"
     >
-      <div className="overflow-hidden rounded-lg border border-[var(--color-line)] bg-[var(--color-bg-soft)]">
-        {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="" className="block h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full min-h-[64px] items-center justify-center text-[10px] text-[var(--color-muted)]">
-            no image
-          </div>
-        )}
-      </div>
+      <ImageUploadField
+        name="imageKey"
+        folder="categories"
+        label="Image"
+        defaultValue={category.imageKey ?? ""}
+        aspectClass="aspect-square"
+      />
 
       <div>
         <label className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)]">
@@ -49,17 +46,6 @@ export function CategoryRowForm({ category }: { category: Category }) {
           Slug
         </label>
         <Input name="slug" required defaultValue={category.slug} />
-      </div>
-      <div>
-        <label className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)]">
-          Image URL
-        </label>
-        <Input
-          name="imageKey"
-          defaultValue={category.imageKey ?? ""}
-          onChange={(e) => setPreview(e.target.value)}
-          placeholder="https://images.unsplash.com/..."
-        />
       </div>
       <div>
         <label className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)]">

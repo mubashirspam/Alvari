@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { upload } from "@imagekit/next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buildImageKitUrl } from "@/lib/imagekit";
+import { uploadImageToImageKit } from "@/lib/admin/upload-image";
 import type { ProductImageRow, ProductVariantRow } from "@/lib/db/schema";
 
 type Props = {
@@ -47,47 +47,19 @@ export function ImageManager({ productId, initialImages, variants }: Props) {
     setUploadError(null);
 
     try {
-      // 1. Get upload auth params from our server
-      const authRes = await fetch("/api/upload-auth");
-      if (!authRes.ok) {
-        const err = await authRes.json().catch(() => ({})) as { message?: string };
-        throw new Error(err.message ?? "Failed to get upload credentials");
-      }
-      const { token, expire, signature, publicKey, folder: serverFolder } = (await authRes.json()) as {
-        token: string;
-        expire: number;
-        signature: string;
-        publicKey: string;
-        folder?: string;
-      };
+      // Compress to <300 KB and upload straight to ImageKit.
+      const { filePath } = await uploadImageToImageKit(
+        fileEntry,
+        "products",
+        setUploadProgress,
+      );
 
-      // 2. Upload directly to ImageKit from the browser
-      const safeFileName =
-        fileEntry.name.replace(/[^a-zA-Z0-9._-]/g, "_") ||
-        `upload-${Date.now()}.jpg`;
-
-      const result = await upload({
-        file: fileEntry,
-        fileName: safeFileName,
-        token,
-        expire,
-        signature,
-        publicKey,
-        folder: serverFolder ?? "/kaasth/products",
-        useUniqueFileName: true,
-        onProgress: (e) => {
-          if (e.total) setUploadProgress(Math.round((e.loaded / e.total) * 100));
-        },
-      });
-
-      if (!result.filePath) throw new Error("ImageKit did not return a filePath");
-
-      // 3. Save the image record in our DB
+      // Save the image record in our DB.
       const saveRes = await fetch(`/api/admin/products/${productId}/images`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageKey: result.filePath,
+          imageKey: filePath,
           alt: alt || null,
           variantId: variantId || null,
         }),

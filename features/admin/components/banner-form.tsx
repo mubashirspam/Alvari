@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUploadField } from "@/features/admin/components/image-upload-field";
 import { BANNER_SLOT_LABEL, type Banner, type BannerSlot } from "@/features/banners/types";
 import {
   createBannerAction,
@@ -33,7 +34,6 @@ export function BannerForm({ banner }: Props) {
   const isEdit = Boolean(banner);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState(banner?.imageKey ?? "");
 
   function handleSubmit(fd: FormData) {
     setError(null);
@@ -129,33 +129,22 @@ export function BannerForm({ banner }: Props) {
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="imageKey">Image URL (desktop)</Label>
-        <Input
-          id="imageKey"
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <ImageUploadField
           name="imageKey"
+          folder="banners"
+          label="Banner image (desktop) *"
           required
           defaultValue={banner?.imageKey ?? ""}
-          onChange={(e) => setImagePreview(e.target.value)}
-          placeholder="https://images.unsplash.com/photo-... or ImageKit path"
+          aspectClass="aspect-[16/9]"
+          hint="Auto-optimised to under 300 KB on upload."
         />
-        {imagePreview ? (
-          <div className="mt-2 overflow-hidden rounded-lg border border-[var(--color-line)]">
-            <img
-              src={imagePreview}
-              alt=""
-              className="block max-h-[200px] w-full object-cover"
-            />
-          </div>
-        ) : null}
-      </div>
-
-      <div>
-        <Label htmlFor="mobileImageKey">Image URL (mobile, optional)</Label>
-        <Input
-          id="mobileImageKey"
+        <ImageUploadField
           name="mobileImageKey"
+          folder="banners"
+          label="Banner image (mobile, optional)"
           defaultValue={banner?.mobileImageKey ?? ""}
+          aspectClass="aspect-[4/5]"
         />
       </div>
 

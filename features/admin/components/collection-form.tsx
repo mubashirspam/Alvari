@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUploadField } from "@/features/admin/components/image-upload-field";
 import type { Collection } from "@/features/collections/types";
 import {
   createCollectionAction,
@@ -18,7 +19,6 @@ export function CollectionForm({ collection }: Props) {
   const isEdit = Boolean(collection);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState(collection?.heroImageKey ?? "");
 
   function handleSubmit(fd: FormData) {
     setError(null);
@@ -88,22 +88,14 @@ export function CollectionForm({ collection }: Props) {
         />
       </div>
 
-      <div>
-        <Label htmlFor="heroImageKey">Hero image URL</Label>
-        <Input
-          id="heroImageKey"
-          name="heroImageKey"
-          defaultValue={collection?.heroImageKey ?? ""}
-          onChange={(e) => setPreview(e.target.value)}
-          placeholder="https://images.unsplash.com/photo-..."
-        />
-        {preview ? (
-          <div className="mt-2 overflow-hidden rounded-lg border border-[var(--color-line)]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="" className="block max-h-[220px] w-full object-cover" />
-          </div>
-        ) : null}
-      </div>
+      <ImageUploadField
+        name="heroImageKey"
+        folder="collections"
+        label="Hero image"
+        defaultValue={collection?.heroImageKey ?? ""}
+        aspectClass="aspect-[16/9]"
+        hint="Auto-optimised to under 300 KB on upload."
+      />
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <div>
