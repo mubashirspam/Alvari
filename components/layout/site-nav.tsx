@@ -68,17 +68,17 @@ export function SiteNav({ variant = "standalone", categoryTree = [] }: Props) {
         variant === "clubbed"
           ? "relative w-full"
           : cn(
-              "relative w-full max-w-[980px] rounded-3xl border backdrop-blur-xl transition-all duration-400 ease-[cubic-bezier(0.76,0,0.24,1)]",
+              "relative w-full max-w-[980px] transition-all duration-400 ease-[cubic-bezier(0.76,0,0.24,1)]",
               scrolled
-                ? "border-[var(--color-line)] bg-[var(--color-bg)]/80 shadow-lg shadow-black/5"
-                : "border-white/30 bg-white/70 shadow-sm shadow-black/5",
+                ? "rounded-full border-[var(--color-line)] bg-[var(--color-bg)]/80 shadow-lg shadow-black/5"
+                : "rounded-full border-white/30 bg-white/70 shadow-sm shadow-black/5",
             )
       }
       onMouseLeave={() => setHovered(null)}
     >
       {/* ── Main nav row ── */}
       <nav className="relative w-full py-3">
-        <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-2 px-6 md:px-10">
+        <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-2 px-6 md:px-5">
         {/* Logo */}
         <Link
           href="/"

@@ -20,6 +20,8 @@ type Props = {
   aspectClass?: string;
   /** Called with the new filePath after a successful upload, or "" when removed. */
   onChange?: (path: string) => void;
+  /** When set, overrides aspectClass and fixes the box to exact dimensions (e.g. "w-20 h-20"). */
+  compactSize?: string;
 };
 
 /**
@@ -36,6 +38,7 @@ export function ImageUploadField({
   required = false,
   aspectClass = "aspect-[16/9]",
   onChange,
+  compactSize,
 }: Props) {
   const [value, setValue] = useState(defaultValue ?? "");
   const [uploading, setUploading] = useState(false);
@@ -68,6 +71,54 @@ export function ImageUploadField({
     ? buildImageKitUrl(value, { width: 800, quality: 70, format: "auto" })
     : null;
 
+  /* ── Compact mode (small thumbnail, click to pick) ── */
+  if (compactSize) {
+    return (
+      <div className="shrink-0">
+        <input type="hidden" name={name} value={value} />
+        <label
+          htmlFor={id}
+          className={`relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-dashed border-[var(--color-line)] bg-[var(--color-bg-soft)] ${compactSize} ${uploading ? "opacity-70" : "hover:border-[var(--color-accent)]"} transition-colors`}
+          title="Click to upload image"
+        >
+          {previewSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={previewSrc} alt="" className="h-full w-full object-cover" />
+          ) : uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-[var(--color-muted)]" />
+          ) : (
+            <ImagePlus className="h-5 w-5 text-[var(--color-muted)]" strokeWidth={1.4} />
+          )}
+          {previewSrc && !uploading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-ink)]/0 transition-all hover:bg-[var(--color-ink)]/40">
+              <ImagePlus className="h-4 w-4 text-white opacity-0 transition-opacity hover:opacity-100" strokeWidth={1.5} />
+            </div>
+          )}
+        </label>
+        <input
+          ref={inputRef}
+          id={id}
+          type="file"
+          accept="image/*"
+          disabled={uploading}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+          className="sr-only"
+        />
+        {value && (
+          <button
+            type="button"
+            onClick={() => { setValue(""); onChange?.(""); }}
+            className="mt-1 block w-full text-center text-[10px] text-[var(--color-muted)] hover:text-red-600"
+          >
+            Remove
+          </button>
+        )}
+        {error && <p className="mt-0.5 text-[10px] text-red-600">{error}</p>}
+      </div>
+    );
+  }
+
+  /* ── Standard mode ── */
   return (
     <div>
       {label ? <Label htmlFor={id}>{label}</Label> : null}

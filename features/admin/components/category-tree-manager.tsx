@@ -136,11 +136,15 @@ function NodeRow({
           <ChevronRight className={`h-4 w-4 transition-transform ${open ? "rotate-90" : ""}`} />
         </button>
 
-        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[var(--color-bg-soft)]">
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[var(--color-bg-soft)]">
           {thumb ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={thumb} alt="" className="h-full w-full object-cover" />
-          ) : null}
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[9px] font-bold uppercase tracking-wide text-amber-500">
+              IMG
+            </div>
+          )}
         </div>
 
         <div className="min-w-0 flex-1">
@@ -151,6 +155,11 @@ function NodeRow({
             {!node.isVisible ? (
               <span className="rounded-full bg-[var(--color-bg-soft)] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                 Hidden
+              </span>
+            ) : null}
+            {!node.imageKey && node.isVisible ? (
+              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-600">
+                No image
               </span>
             ) : null}
           </div>
@@ -293,106 +302,75 @@ function NodeForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-4 rounded-xl border border-[var(--color-line)] bg-[var(--color-bg-soft)] p-4"
+      className="rounded-xl border border-[var(--color-line)] bg-[var(--color-bg-soft)] p-3"
     >
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <Label htmlFor="cn-name">Name *</Label>
-          <Input id="cn-name" name="name" required defaultValue={node?.name ?? ""} placeholder="Solid Wood" />
-        </div>
-        <div>
-          <Label htmlFor="cn-slug">Slug *</Label>
-          <Input id="cn-slug" name="slug" required defaultValue={node?.slug ?? ""} placeholder="solid-wood" />
-        </div>
-      </div>
+      <div className="flex gap-3">
+        {/* Compact image picker — 80×80 */}
+        <ImageUploadField
+          name="imageKey"
+          folder="categories"
+          defaultValue={node?.imageKey ?? ""}
+          aspectClass="aspect-square"
+          onChange={setImageKey}
+          compactSize="w-20 h-20"
+        />
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <Label htmlFor="cn-parent">Parent</Label>
-          <select
-            id="cn-parent"
-            name="parentId"
-            defaultValue={defaultParent}
-            className="mt-1 w-full rounded-[4px] border border-[var(--color-line)] bg-[var(--color-bg)] px-4 py-3.5 text-[15px] text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none"
-          >
-            <option value="">— Top level —</option>
-            {parentOptions
-              .filter((o) => o.id !== node?.id)
-              .map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.label}
-                </option>
-              ))}
-          </select>
-        </div>
-        <div>
-          <Label htmlFor="cn-sort">Sort order</Label>
-          <Input id="cn-sort" name="sortOrder" type="number" defaultValue={node?.sortOrder ?? 0} />
-        </div>
-      </div>
+        {/* Fields */}
+        <div className="flex-1 min-w-0 space-y-2">
+          {/* Row 1: name + slug */}
+          <div className="grid grid-cols-2 gap-2">
+            <Input name="name" required defaultValue={node?.name ?? ""} placeholder="Name *" className="text-[13px] py-2 h-auto" />
+            <Input name="slug" required defaultValue={node?.slug ?? ""} placeholder="slug *" className="text-[13px] py-2 h-auto" />
+          </div>
 
-      <ImageUploadField
-        name="imageKey"
-        folder="categories"
-        label="Tile image"
-        defaultValue={node?.imageKey ?? ""}
-        aspectClass="aspect-square"
-        hint="Square works best. Auto-optimised to under 300 KB."
-        onChange={setImageKey}
-      />
-
-      <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-bg)] p-4">
-        <p className="mb-3 text-[12px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
-          Where it links (leave blank for a drill-down container)
-        </p>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div>
-            <Label htmlFor="cn-linkcat">Product category</Label>
+          {/* Row 2: parent + sort + visible */}
+          <div className="grid grid-cols-[1fr_80px_auto] gap-2 items-center">
             <select
-              id="cn-linkcat"
-              name="linkCategory"
-              defaultValue={node?.linkCategory ?? ""}
-              className="mt-1 w-full rounded-[4px] border border-[var(--color-line)] bg-[var(--color-bg)] px-4 py-3.5 text-[15px] text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none"
+              name="parentId"
+              defaultValue={defaultParent}
+              className="w-full rounded-md border border-[var(--color-line)] bg-[var(--color-bg)] px-2.5 py-2 text-[13px] text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none"
             >
-              <option value="">— None —</option>
-              {Object.entries(CATEGORY_LABEL).map(([v, l]) => (
-                <option key={v} value={v}>
-                  {l}
-                </option>
+              <option value="">— Top level —</option>
+              {parentOptions.filter((o) => o.id !== node?.id).map((o) => (
+                <option key={o.id} value={o.id}>{o.label}</option>
               ))}
             </select>
+            <Input name="sortOrder" type="number" defaultValue={node?.sortOrder ?? 0} placeholder="Order" className="text-[13px] py-2 h-auto text-center" />
+            <label className="flex items-center gap-1.5 whitespace-nowrap text-[12px] text-[var(--color-muted)] cursor-pointer">
+              <input type="checkbox" name="isVisible" defaultChecked={node?.isVisible ?? true} className="h-3.5 w-3.5 accent-[var(--color-accent)]" />
+              Visible
+            </label>
           </div>
-          <div>
-            <Label htmlFor="cn-material">Material filter</Label>
-            <Input id="cn-material" name="material" defaultValue={node?.material ?? ""} placeholder="solid / engineered" />
-          </div>
-          <div>
-            <Label htmlFor="cn-href">Custom URL (overrides)</Label>
-            <Input id="cn-href" name="linkHref" defaultValue={node?.linkHref ?? ""} placeholder="/products?room=living" />
+
+          {/* Row 3: link fields */}
+          <div className="grid grid-cols-3 gap-2">
+            <select
+              name="linkCategory"
+              defaultValue={node?.linkCategory ?? ""}
+              className="w-full rounded-md border border-[var(--color-line)] bg-[var(--color-bg)] px-2.5 py-2 text-[13px] text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none"
+            >
+              <option value="">— Link category —</option>
+              {Object.entries(CATEGORY_LABEL).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+            <Input name="material" defaultValue={node?.material ?? ""} placeholder="Material filter" className="text-[13px] py-2 h-auto" />
+            <Input name="linkHref" defaultValue={node?.linkHref ?? ""} placeholder="Custom URL" className="text-[13px] py-2 h-auto" />
           </div>
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-[var(--color-ink)]">
-        <input type="checkbox" name="isVisible" defaultChecked={node?.isVisible ?? true} className="h-4 w-4" />
-        Visible on site
-      </label>
+      {error && <p className="mt-2 text-[12px] text-red-600">{error}</p>}
 
-      {error ? <p className="text-sm text-red-700">{error}</p> : null}
-
-      <div className="flex items-center gap-3">
+      <div className="mt-3 flex items-center gap-2">
         <button
           type="submit"
           disabled={saving}
-          className="rounded-full bg-[var(--color-accent)] px-6 py-2.5 text-[13px] font-semibold text-[var(--color-navy-deep)] transition hover:bg-[var(--color-accent-warm)] disabled:opacity-50"
+          className="rounded-full bg-[var(--color-accent)] px-5 py-2 text-[12px] font-semibold text-[var(--color-navy-deep)] transition hover:bg-[var(--color-accent-warm)] disabled:opacity-50"
         >
-          {saving ? "Saving…" : isEdit ? "Save changes" : "Create"}
+          {saving ? "Saving…" : isEdit ? "Save" : "Create"}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="text-[13px] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-        >
+        <button type="button" onClick={onCancel} className="text-[12px] text-[var(--color-muted)] hover:text-[var(--color-ink)]">
           Cancel
         </button>
       </div>

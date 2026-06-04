@@ -134,20 +134,20 @@ export function CategoryBrowser({
 
         {/* Tiles */}
         {tiles.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6 md:gap-6">
+          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-4 md:grid-cols-6 md:gap-6">
             {tiles.map((node) => {
               const img = node.imageKey
-                ? buildImageKitUrl(node.imageKey, { width: 500, quality: 80, format: "auto" })
+                ? buildImageKitUrl(node.imageKey, { width: 400, quality: 80, format: "auto" })
                 : null;
               return (
                 <button
                   key={node.id}
                   type="button"
                   onClick={() => openTile(node)}
-                  className="group flex flex-col items-center gap-3 text-center"
+                  className="group flex flex-col items-center gap-2 text-center"
                 >
                   <div
-                    className="relative aspect-square w-full overflow-hidden rounded-3xl"
+                    className="relative aspect-square w-full overflow-hidden rounded-2xl"
                     style={{
                       background: node.accentColor
                         ? `linear-gradient(145deg, ${node.accentColor}22, ${node.accentColor}11)`
@@ -159,12 +159,12 @@ export function CategoryBrowser({
                         src={img}
                         alt={node.name}
                         fill
-                        sizes="(min-width: 768px) 16vw, 45vw"
+                        sizes="(min-width: 768px) 16vw, 25vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : null}
                   </div>
-                  <span className="text-[13px] font-medium leading-tight text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent)] md:text-[14px]">
+                  <span className="text-[10px] font-medium leading-tight text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent)] md:text-[13px]">
                     {node.name}
                   </span>
                 </button>
