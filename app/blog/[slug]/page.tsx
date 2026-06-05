@@ -36,7 +36,10 @@ export async function generateMetadata({
   return {
     title: post.metaTitle ?? post.title,
     description: post.metaDescription ?? post.excerpt ?? undefined,
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      languages: post.language === "ml" ? { "en": `/blog` } : { "ml": `/blog` },
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt ?? undefined,

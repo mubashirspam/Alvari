@@ -133,6 +133,39 @@ export function breadcrumbJsonLd(
   };
 }
 
+export function websiteJsonLd(): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${siteConfig.url}#website`,
+    name: siteConfig.name,
+    url: siteConfig.url,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${siteConfig.url}/products?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+export function productListJsonLd(products: Product[]): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Alvari Furniture — All Products",
+    url: absoluteUrl("/products"),
+    itemListElement: products.slice(0, 20).map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: absoluteUrl(`/products/${p.slug}`),
+      name: p.name,
+    })),
+  };
+}
+
 export function faqJsonLd(
   items: { question: string; answer: string }[],
 ): JsonLd {

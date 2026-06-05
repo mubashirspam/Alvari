@@ -7,11 +7,21 @@ export default function robots(): MetadataRoute.Robots {
     : siteConfig.url;
   return {
     rules: [
+      // Main rule — all crawlers including Googlebot
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin", "/api", "/docs"],
+        disallow: ["/admin", "/api", "/account"],
       },
+      // Explicitly allow known AI crawlers (some check robots.txt)
+      { userAgent: "GPTBot", allow: "/" },
+      { userAgent: "ChatGPT-User", allow: "/" },
+      { userAgent: "PerplexityBot", allow: "/" },
+      { userAgent: "ClaudeBot", allow: "/" },
+      { userAgent: "anthropic-ai", allow: "/" },
+      { userAgent: "Gemini", allow: "/" },
+      { userAgent: "Google-Extended", allow: "/" },
+      { userAgent: "Applebot-Extended", allow: "/" },
     ],
     sitemap: `${base}/sitemap.xml`,
     host: base,

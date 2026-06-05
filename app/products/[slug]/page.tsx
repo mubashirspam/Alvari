@@ -16,7 +16,7 @@ import {
 } from "@/features/products/components/product-story";
 import { getProductBySlug } from "@/features/products/services/product-service";
 import { CATEGORY_LABEL } from "@/features/products/types";
-import { breadcrumbJsonLd, productJsonLd } from "@/lib/seo/jsonld";
+import { breadcrumbJsonLd, productJsonLd, faqJsonLd } from "@/lib/seo/jsonld";
 
 export const revalidate = 60;
 
@@ -64,8 +64,35 @@ export default async function ProductDetailPage({
 
   if (!product) notFound();
 
+  const inStock = product.variants.some((v) => v.stock > 0) || product.variants.length === 0;
+  const deliveryWeeks = inStock ? "2–4" : "4–8";
+
+  const productFaq = faqJsonLd([
+    {
+      question: `What is the price of ${product.name}?`,
+      answer: `The ${product.name} starts at ₹${product.priceNow.toLocaleString("en-IN")}. ${product.variants.length > 1 ? `It is available in ${product.variants.length} variants.` : ""} Contact us on WhatsApp +91 9400306614 for the latest pricing.`,
+    },
+    {
+      question: `How long does delivery of ${product.name} take in Kerala?`,
+      answer: `Delivery takes ${deliveryWeeks} weeks after order confirmation and advance payment. Alvari delivers and installs across all districts of Kerala.`,
+    },
+    {
+      question: `Can I customise the ${product.name} to my dimensions?`,
+      answer: `Yes. Alvari accepts custom orders for any furniture including the ${product.name}. You can specify exact dimensions, wood type (teak, rubber wood, plywood), finish colour, and share reference images. Contact us on WhatsApp to discuss.`,
+    },
+    {
+      question: `Does Alvari provide installation for ${product.name}?`,
+      answer: `Yes, delivery and installation are included in the price across Kerala. Our team will install the furniture at your home.`,
+    },
+    {
+      question: "What is Alvari's advance payment policy?",
+      answer: "Alvari requires 50% advance to confirm production. The remaining balance is paid at the time of delivery and installation.",
+    },
+  ]);
+
   const jsonLd = [
     productJsonLd(product),
+    productFaq,
     breadcrumbJsonLd([
       { name: "Home", path: "/" },
       { name: "Products", path: "/products" },

@@ -70,12 +70,12 @@ export function SiteNav({ variant = "standalone", categoryTree = [] }: Props) {
           : cn(
               "relative w-full max-w-[980px] transition-all duration-400 ease-[cubic-bezier(0.76,0,0.24,1)]",
               scrolled
-                ? "rounded-full border-[var(--color-line)] bg-[var(--color-bg)]/80 shadow-lg shadow-black/5"
-                : "rounded-full border-white/30 bg-white/70 shadow-sm shadow-black/5",
+                ? "rounded-full border-[var(--color-line)] bg-[var(--color-bg)] shadow-lg shadow-black/5"
+                : "rounded-full border-white bg-white shadow-sm shadow-black/5",
             )
       }
       onMouseLeave={() => setHovered(null)}
-      
+
     >
       {/* ── Main nav row ── */}
       <nav className="relative w-full py-3">

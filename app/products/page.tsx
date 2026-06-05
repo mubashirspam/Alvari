@@ -8,7 +8,7 @@ import { PromoStrip } from "@/features/landing/promo-strip";
 import { ProductsClientShell } from "@/features/products/components/products-client-shell";
 import { getAllProducts } from "@/features/products/services/product-service";
 import { CATEGORY_LABEL, type ProductCategory } from "@/features/products/types";
-import { breadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { breadcrumbJsonLd, productListJsonLd } from "@/lib/seo/jsonld";
 
 export const revalidate = 60;
 
@@ -65,6 +65,7 @@ export default async function ProductsPage({
   return (
     <>
       <JsonLd data={breadcrumbJsonLd(crumbs)} />
+      <JsonLd data={productListJsonLd(products.filter((p) => p.isActive))} />
       <header className="fixed inset-x-0 top-0 z-50">
         <PromoStrip />
         <HeaderWrapper>

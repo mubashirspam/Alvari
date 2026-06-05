@@ -45,7 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: url(`/products/${p.slug}`),
         lastModified: now,
         changeFrequency: "weekly" as const,
-        priority: 0.8,
+        priority: p.isFeatured ? 0.9 : 0.8,
       }));
     posts = postList.map((p) => ({
       url: url(`/blog/${p.slug}`),

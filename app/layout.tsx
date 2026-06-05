@@ -4,7 +4,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { CartDrawer } from "@/features/cart/components/cart-drawer";
 import { PageTracker } from "@/components/analytics/page-tracker";
 import { siteConfig } from "@/lib/env";
-import { localBusinessJsonLd, organizationJsonLd } from "@/lib/seo/jsonld";
+import { localBusinessJsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -53,12 +53,16 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    site: "@alvarifurniture",
     title: "Alvari — Direct-from-Factory Furniture",
     description:
       "Factory-priced wardrobes, beds, sofas, and complete room sets. Built in Wayanad, delivered across Kerala.",
     images: ["/og-default.png"],
   },
   robots: { index: true, follow: true },
+  other: {
+    "google-site-verification": "",
+  },
 };
 
 export default function RootLayout({
@@ -67,7 +71,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${montserrat.variable}`}>
       <body>
-        <JsonLd data={[organizationJsonLd(), localBusinessJsonLd()]} />
+        <JsonLd data={[organizationJsonLd(), localBusinessJsonLd(), websiteJsonLd()]} />
         {children}
         <CartDrawer />
         <PageTracker />
