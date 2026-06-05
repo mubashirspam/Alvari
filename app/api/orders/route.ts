@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { products, productVariants } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { products, productVariants, promoCodes } from "@/lib/db/schema";
+import { eq, sql } from "drizzle-orm";
 import { insertOrderWithItems } from "@/features/orders/repositories/order-repository";
 import { mapOrder, generateShortCode } from "@/features/orders/types";
 import { sendOrderConfirmationEmail, sendAdminOrderAlert } from "@/lib/email/send-order-email";
@@ -30,6 +30,15 @@ const orderSchema = z.object({
   state: z.string().trim().min(2).max(100),
   pincode: z.string().trim().regex(/^\d{6}$/, "Enter a valid 6-digit pincode"),
   notes: z.string().trim().max(2000).optional().nullable(),
+  referralCode: z.string().trim().max(64).optional().nullable(),
+  promoCode: z.string().trim().max(64).optional().nullable(),
+  discountInPaise: z.number().int().min(0).optional(),
+  isCustomOrder: z.boolean().optional(),
+  customDimensions: z.string().trim().max(500).optional().nullable(),
+  customWoodType: z.string().trim().max(100).optional().nullable(),
+  customFinish: z.string().trim().max(100).optional().nullable(),
+  customTimeline: z.string().trim().max(100).optional().nullable(),
+  customReferenceImages: z.array(z.string().url()).max(3).optional(),
   items: z.array(itemSchema).min(1),
 });
 
@@ -131,15 +140,32 @@ export async function POST(req: NextRequest) {
       shippingAddress,
       notes: data.notes ?? null,
       subtotalInPaise,
-      totalInPaise: subtotalInPaise,
+      totalInPaise: Math.max(0, subtotalInPaise - (data.discountInPaise ?? 0)),
       status: "pending",
       placedVia: "website",
+      referralCode: data.referralCode ?? null,
+      promoCode: data.promoCode ?? null,
+      discountInPaise: data.discountInPaise ?? 0,
+      isCustomOrder: data.isCustomOrder ?? false,
+      customDimensions: data.customDimensions ?? null,
+      customWoodType: data.customWoodType ?? null,
+      customFinish: data.customFinish ?? null,
+      customTimeline: data.customTimeline ?? null,
+      customReferenceImages: data.customReferenceImages ?? [],
     },
     verifiedItems,
   );
 
   const order = mapOrder(orderRow, itemRows);
   const siteUrl = env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+  // Increment promo usage count (best-effort)
+  if (data.promoCode) {
+    void db
+      .update(promoCodes)
+      .set({ usageCount: sql`${promoCodes.usageCount} + 1` })
+      .where(eq(promoCodes.code, data.promoCode));
+  }
 
   // Fire-and-forget notifications
   void sendOrderConfirmationEmail(order, siteUrl);

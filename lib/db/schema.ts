@@ -558,6 +558,15 @@ export const orders = pgTable(
     totalInPaise: integer("total_in_paise").notNull(),
     status: orderStatusEnum("status").notNull().default("pending"),
     placedVia: text("placed_via").notNull().default("whatsapp"),
+    referralCode: text("referral_code"),
+    promoCode: text("promo_code"),
+    discountInPaise: integer("discount_in_paise").notNull().default(0),
+    isCustomOrder: boolean("is_custom_order").notNull().default(false),
+    customDimensions: text("custom_dimensions"),
+    customWoodType: text("custom_wood_type"),
+    customFinish: text("custom_finish"),
+    customTimeline: text("custom_timeline"),
+    customReferenceImages: text("custom_reference_images").array().notNull().default([]),
     whatsappOpenedAt: timestamp("whatsapp_opened_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -628,3 +637,75 @@ export type NewOrderRow = typeof orders.$inferInsert;
 export type OrderItemRow = typeof orderItems.$inferSelect;
 export type NewOrderItemRow = typeof orderItems.$inferInsert;
 export type OrderStatus = OrderRow["status"];
+
+// ────────────────────────────────────────────────────────────────────────────
+// Referrals + Promo codes
+// ────────────────────────────────────────────────────────────────────────────
+
+export const referralSources = pgTable(
+  "referral_sources",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    code: text("code").notNull().unique(),
+    name: text("name").notNull(),
+    discountPercent: integer("discount_percent").notNull().default(0),
+    createdBy: text("created_by"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("referral_sources_code_idx").on(table.code)],
+);
+
+export const promoDiscountTypeEnum = pgEnum("promo_discount_type", ["percent", "flat"]);
+
+export const promoCodes = pgTable(
+  "promo_codes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    code: text("code").notNull().unique(),
+    discountType: promoDiscountTypeEnum("discount_type").notNull(),
+    discountValue: integer("discount_value").notNull(),
+    minOrderInPaise: integer("min_order_in_paise").notNull().default(0),
+    maxUsages: integer("max_usages"),
+    usageCount: integer("usage_count").notNull().default(0),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("promo_codes_code_idx").on(table.code)],
+);
+
+export type ReferralSourceRow = typeof referralSources.$inferSelect;
+export type NewReferralSourceRow = typeof referralSources.$inferInsert;
+export type PromoCodeRow = typeof promoCodes.$inferSelect;
+
+// ────────────────────────────────────────────────────────────────────────────
+// Visitor analytics
+// ────────────────────────────────────────────────────────────────────────────
+
+export const pageViews = pgTable(
+  "page_views",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    fingerprint: text("fingerprint").notNull(),
+    page: text("page").notNull(),
+    referrer: text("referrer"),
+    utmSource: text("utm_source"),
+    utmMedium: text("utm_medium"),
+    utmCampaign: text("utm_campaign"),
+    deviceType: text("device_type"),
+    city: text("city"),
+    country: text("country"),
+    sessionId: text("session_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("page_views_fingerprint_idx").on(table.fingerprint),
+    index("page_views_page_idx").on(table.page, table.createdAt),
+    index("page_views_created_idx").on(table.createdAt),
+  ],
+);
+
+export type PageViewRow = typeof pageViews.$inferSelect;
+export type NewPageViewRow = typeof pageViews.$inferInsert;
+export type NewPromoCodeRow = typeof promoCodes.$inferInsert;

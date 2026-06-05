@@ -15,6 +15,27 @@
       "when": 1780497531950,
       "tag": "0001_powerful_nebula",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780648254740,
+      "tag": "0002_neat_bloodstorm",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780648510456,
+      "tag": "0003_deep_deathbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780648827228,
+      "tag": "0004_handy_nova",
+      "breakpoints": true
     }
   ]
 }

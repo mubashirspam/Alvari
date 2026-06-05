@@ -7,6 +7,10 @@ import Link from "next/link";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Loader2 } from "lucide-react";
 import { useCart, cartSubtotal } from "@/features/cart/store";
 import { formatINR } from "@/lib/utils";
+import {
+  CustomOrderSection,
+  type CustomOrderData,
+} from "@/features/orders/components/custom-order-section";
 
 type FormData = {
   customerName: string;
@@ -91,17 +95,60 @@ function Input({
   );
 }
 
+const CUSTOM_EMPTY: CustomOrderData = {
+  isCustom: false,
+  dimensions: "",
+  woodType: "",
+  finish: "",
+  timeline: "",
+  referenceImages: [],
+};
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, setQuantity, remove, clear, hasHydrated } = useCart();
   const [form, setForm] = useState<FormData>(INIT);
+  const [customOrder, setCustomOrder] = useState<CustomOrderData>(CUSTOM_EMPTY);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoApplied, setPromoApplied] = useState<{ code: string; discountRupees: number; label: string } | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
 
   const set = (k: keyof FormData) => (v: string) =>
     setForm((p) => ({ ...p, [k]: v }));
 
   const subtotal = cartSubtotal(items);
+  const discount = promoApplied?.discountRupees ?? 0;
+  const total = Math.max(0, subtotal - discount);
+
+  // Read referral code from cookie on mount
+  useEffect(() => {
+    const match = document.cookie.match(/alvari_ref=([A-Za-z0-9_-]+)/);
+    if (match?.[1]) setReferralCode(match[1]);
+  }, []);
+
+  async function applyPromo() {
+    if (!promoInput.trim()) return;
+    setPromoLoading(true);
+    setPromoError("");
+    try {
+      const res = await fetch(
+        `/api/promo/validate?code=${encodeURIComponent(promoInput.trim())}&total=${subtotal}`,
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setPromoError(data.error ?? "Invalid code");
+        setPromoApplied(null);
+      } else {
+        setPromoApplied({ code: data.code, discountRupees: data.discountRupees, label: data.label });
+      }
+    } finally {
+      setPromoLoading(false);
+    }
+  }
 
   // Auto-lookup city/state from pincode
   useEffect(() => {
@@ -159,6 +206,15 @@ export default function CheckoutPage() {
           ...form,
           customerPhone: form.customerPhone.replace(/\D/g, ""),
           customerEmail: form.customerEmail || null,
+          referralCode: referralCode || null,
+          promoCode: promoApplied?.code ?? null,
+          discountInPaise: Math.round(discount * 100),
+          isCustomOrder: customOrder.isCustom,
+          customDimensions: customOrder.dimensions || null,
+          customWoodType: customOrder.woodType || null,
+          customFinish: customOrder.finish || null,
+          customTimeline: customOrder.timeline || null,
+          customReferenceImages: customOrder.referenceImages,
           items: items.map((it) => ({
             productId: it.productId,
             variantId: it.variantId,
@@ -357,6 +413,9 @@ export default function CheckoutPage() {
                   className="w-full resize-y rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] outline-none transition-colors focus:border-[var(--color-accent)] hover:border-[var(--color-muted)]"
                 />
               </section>
+
+              {/* Custom order */}
+              <CustomOrderSection value={customOrder} onChange={setCustomOrder} />
             </div>
 
             {/* ── Right: Order summary ── */}
@@ -429,17 +488,70 @@ export default function CheckoutPage() {
                   ))}
                 </ul>
 
+                {/* Promo code */}
                 <div className="mt-4 border-t border-[var(--color-line)] pt-4">
+                  {promoApplied ? (
+                    <div className="flex items-center justify-between rounded-xl bg-green-50 px-3 py-2 text-sm">
+                      <div>
+                        <span className="font-mono font-semibold text-green-700">{promoApplied.code}</span>
+                        <span className="ml-2 text-green-600">{promoApplied.label}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setPromoApplied(null); setPromoInput(""); }}
+                        className="text-green-500 hover:text-red-500 transition-colors text-xs"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoInput}
+                        onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), applyPromo())}
+                        placeholder="Promo code"
+                        className="flex-1 rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]"
+                      />
+                      <button
+                        type="button"
+                        onClick={applyPromo}
+                        disabled={promoLoading || !promoInput.trim()}
+                        className="rounded-xl border border-[var(--color-line)] px-3 py-2 text-xs font-medium text-[var(--color-ink)] transition-colors hover:border-[var(--color-accent)] disabled:opacity-50"
+                      >
+                        {promoLoading ? "…" : "Apply"}
+                      </button>
+                    </div>
+                  )}
+                  {promoError && <p className="mt-1 text-xs text-red-500">{promoError}</p>}
+                </div>
+
+                {/* Totals */}
+                <div className="mt-3 space-y-1.5">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-[var(--color-muted)]">Subtotal</span>
-                    <span className="font-semibold text-[var(--color-ink)]">
-                      {formatINR(subtotal)}
-                    </span>
+                    <span className="text-[var(--color-ink)]">{formatINR(subtotal)}</span>
                   </div>
-                  <p className="mt-1 text-xs text-[var(--color-muted)]">
-                    Delivery charges will be confirmed by our team.
+                  {discount > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-green-600">Discount</span>
+                      <span className="font-semibold text-green-600">−{formatINR(discount)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between border-t border-[var(--color-line)] pt-1.5 text-sm">
+                    <span className="font-semibold text-[var(--color-ink)]">Total</span>
+                    <span className="font-serif text-lg font-semibold text-[var(--color-ink)]">{formatINR(total)}</span>
+                  </div>
+                  <p className="text-xs text-[var(--color-muted)]">
+                    Delivery charges confirmed by our team.
                   </p>
                 </div>
+                {referralCode && (
+                  <p className="mt-2 text-xs text-[var(--color-muted)]">
+                    Referral: <span className="font-mono font-medium">{referralCode}</span>
+                  </p>
+                )}
 
                 {errors.root && (
                   <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-600">

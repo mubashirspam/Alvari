@@ -70,6 +70,15 @@ export type Order = {
   total: number;
   status: OrderStatus;
   placedVia: string;
+  referralCode: string | null;
+  promoCode: string | null;
+  discountInPaise: number;
+  isCustomOrder: boolean;
+  customDimensions: string | null;
+  customWoodType: string | null;
+  customFinish: string | null;
+  customTimeline: string | null;
+  customReferenceImages: string[];
   whatsappOpenedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -90,6 +99,15 @@ export function mapOrder(row: OrderRow, items: OrderItemRow[]): Order {
     total: paiseToRupees(row.totalInPaise),
     status: row.status,
     placedVia: row.placedVia,
+    referralCode: row.referralCode,
+    promoCode: row.promoCode,
+    discountInPaise: row.discountInPaise,
+    isCustomOrder: row.isCustomOrder,
+    customDimensions: row.customDimensions,
+    customWoodType: row.customWoodType,
+    customFinish: row.customFinish,
+    customTimeline: row.customTimeline,
+    customReferenceImages: row.customReferenceImages ?? [],
     whatsappOpenedAt: row.whatsappOpenedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

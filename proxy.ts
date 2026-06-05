@@ -47,9 +47,25 @@ function applyNonProdHeaders(response: NextResponse, mode: string): NextResponse
   return response;
 }
 
+const REF_COOKIE = "alvari_ref";
+const REF_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const mode = envMode();
+
+  // Capture ?ref= referral code into a 30-day cookie
+  const refParam = request.nextUrl.searchParams.get("ref");
+  let refResponse: NextResponse | null = null;
+  if (refParam && refParam.length <= 64 && /^[A-Za-z0-9_-]+$/.test(refParam)) {
+    refResponse = NextResponse.next();
+    refResponse.cookies.set(REF_COOKIE, refParam.toUpperCase(), {
+      maxAge: REF_COOKIE_MAX_AGE,
+      path: "/",
+      sameSite: "lax",
+      httpOnly: false,
+    });
+  }
   const isAdminRoute = pathname.startsWith("/admin");
   const isPublicAdminRoute =
     pathname === "/admin/login" || pathname === "/admin/setup";
@@ -83,10 +99,12 @@ export async function proxy(request: NextRequest) {
 
   // 3. Non-prod: tag every response with noindex so we never get crawled.
   if (mode !== "production") {
-    const response = NextResponse.next();
+    const response = refResponse ?? NextResponse.next();
     applyNonProdHeaders(response, mode);
     return response;
   }
+
+  return refResponse ?? undefined;
 }
 
 export const config = {

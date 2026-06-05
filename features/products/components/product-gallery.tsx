@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { Share2, Copy, Check } from "lucide-react";
 import { ProductIllustration } from "@/features/products/components/product-illustration";
 import type { Product, ProductImage, ProductVariant } from "@/features/products/types";
 import { BADGE_LABEL, HOT_BADGES } from "@/features/products/types";
@@ -60,6 +61,25 @@ export function ProductGallery({ product }: Props) {
 
   const [activeIdx, setActiveIdx] = useState(0);
   const activeImage = gallery[activeIdx] ?? gallery[0] ?? null;
+  const [copied, setCopied] = useState(false);
+
+  async function handleShare() {
+    const url = `${siteConfig.url}/products/${product.slug}`;
+    const shareData = {
+      title: product.name,
+      text: `${product.name} — ${product.meta}`,
+      url,
+    };
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try { await navigator.share(shareData); return; } catch { /* cancelled */ }
+    }
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard blocked */ }
+  }
 
   const priceNow = selectedVariant?.priceNow ?? product.priceNow;
   const priceWas = selectedVariant?.priceWas ?? product.priceWas;
@@ -276,6 +296,24 @@ export function ProductGallery({ product }: Props) {
           >
             Ask on WhatsApp
           </a>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--color-line)] px-5 py-3.5 text-[13px] font-medium text-[var(--color-ink)] transition-all duration-300 hover:border-[var(--color-accent)]"
+            aria-label="Share product"
+          >
+            {copied ? (
+              <>
+                <Check className="h-4 w-4 text-green-500" />
+                <span className="text-green-600">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="h-4 w-4" />
+                Share
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Montserrat } from "next/font/google";
 import { JsonLd } from "@/components/seo/json-ld";
 import { CartDrawer } from "@/features/cart/components/cart-drawer";
+import { PageTracker } from "@/components/analytics/page-tracker";
 import { siteConfig } from "@/lib/env";
 import { localBusinessJsonLd, organizationJsonLd } from "@/lib/seo/jsonld";
 import "./globals.css";
@@ -69,6 +70,7 @@ export default function RootLayout({
         <JsonLd data={[organizationJsonLd(), localBusinessJsonLd()]} />
         {children}
         <CartDrawer />
+        <PageTracker />
       </body>
     </html>
   );

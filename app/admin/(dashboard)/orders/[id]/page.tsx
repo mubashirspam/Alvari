@@ -118,6 +118,34 @@ export default async function AdminOrderDetailPage({
             </table>
           </section>
 
+          {/* Custom order details */}
+          {order.isCustomOrder && (
+            <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-amber-700">
+                Custom Order Specifications
+              </p>
+              <dl className="space-y-2 text-sm">
+                {order.customDimensions && <div><dt className="text-xs text-amber-600">Dimensions</dt><dd className="text-[var(--color-ink)]">{order.customDimensions}</dd></div>}
+                {order.customWoodType && <div><dt className="text-xs text-amber-600">Wood / Material</dt><dd className="text-[var(--color-ink)]">{order.customWoodType}</dd></div>}
+                {order.customFinish && <div><dt className="text-xs text-amber-600">Finish</dt><dd className="text-[var(--color-ink)]">{order.customFinish}</dd></div>}
+                {order.customTimeline && <div><dt className="text-xs text-amber-600">Timeline</dt><dd className="text-[var(--color-ink)]">{order.customTimeline}</dd></div>}
+              </dl>
+              {order.customReferenceImages.length > 0 && (
+                <div className="mt-3">
+                  <p className="mb-2 text-xs text-amber-600">Reference images</p>
+                  <div className="flex flex-wrap gap-2">
+                    {order.customReferenceImages.map((url) => (
+                      <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={url} alt="Reference" className="h-20 w-20 rounded-lg object-cover border border-amber-200 hover:opacity-80 transition-opacity" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
           {/* Notes */}
           {order.notes && (
             <section className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-bg-soft)] p-5">

@@ -107,15 +107,22 @@ export default async function AdminOrdersPage() {
                 return (
                   <tr
                     key={order.id}
-                    className="border-t border-[var(--color-line)] hover:bg-[var(--color-bg-soft)]/50 transition-colors"
+                    className={`border-t border-[var(--color-line)] hover:bg-[var(--color-bg-soft)]/50 transition-colors ${order.isCustomOrder ? "bg-amber-50/40" : ""}`}
                   >
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        className="font-mono text-xs font-semibold text-[var(--color-accent)] hover:underline"
-                      >
-                        {order.shortCode}
-                      </Link>
+                      <div className="flex items-center gap-1.5">
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="font-mono text-xs font-semibold text-[var(--color-accent)] hover:underline"
+                        >
+                          {order.shortCode}
+                        </Link>
+                        {order.isCustomOrder && (
+                          <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">
+                            Custom
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-[var(--color-ink)]">{order.customerName}</p>
