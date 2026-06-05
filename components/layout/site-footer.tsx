@@ -24,14 +24,6 @@ function FacebookIcon(props: IconProps) {
   );
 }
 
-function YoutubeIcon(props: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" {...props}>
-      <path d="M22 8.5a4 4 0 0 0-2.8-2.8C17.4 5.2 12 5.2 12 5.2s-5.4 0-7.2.5A4 4 0 0 0 2 8.5 42 42 0 0 0 1.5 12 42 42 0 0 0 2 15.5a4 4 0 0 0 2.8 2.8c1.8.5 7.2.5 7.2.5s5.4 0 7.2-.5A4 4 0 0 0 22 15.5 42 42 0 0 0 22.5 12 42 42 0 0 0 22 8.5Z" />
-      <path d="M10 15V9l5 3-5 3Z" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
 
 const quickLinks = [
   { href: "/products", label: "Products" },
@@ -45,9 +37,8 @@ const socials: {
   label: string;
   Icon: ComponentType<IconProps>;
 }[] = [
-  { href: "https://instagram.com/", label: "Instagram", Icon: InstagramIcon },
-  { href: "https://facebook.com/", label: "Facebook", Icon: FacebookIcon },
-  { href: "https://youtube.com/", label: "YouTube", Icon: YoutubeIcon },
+  { href: siteConfig.socials.instagram, label: "Instagram", Icon: InstagramIcon },
+  { href: siteConfig.socials.facebook, label: "Facebook", Icon: FacebookIcon },
   {
     href: `https://wa.me/${siteConfig.whatsappNumber}`,
     label: "WhatsApp",

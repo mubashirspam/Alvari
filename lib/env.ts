@@ -78,7 +78,7 @@ export const siteConfig = {
   tagline: "Direct-from-Factory Furniture",
   url: env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   whatsappNumber: env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919999999999",
-  displayNumber: "+91 99999 99999",
+  displayNumber: "+91 94003 06614",
   location: "Kalpetta, Wayanad — Kerala",
   hours: "Mon–Sat · 9am–8pm",
   address: {
@@ -90,9 +90,9 @@ export const siteConfig = {
   geo: { lat: 11.6088, lng: 76.0833 },
   founders: ["Alvari"],
   socials: {
-    instagram: "https://instagram.com/alvarifurniture",
-    facebook: "https://facebook.com/alvarifurniture",
-    youtube: "https://youtube.com/@alvarifurniture",
+    instagram: "https://www.instagram.com/alvari.in_",
+    facebook: "https://www.facebook.com/profile.php?id=61590393175389",
+    whatsapp: "https://wa.me/919400306614",
   },
   serviceArea: "Kerala",
 } as const;

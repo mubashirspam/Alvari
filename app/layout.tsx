@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    site: "@alvarifurniture",
+    site: "@alvari.in_",
     title: "Alvari — Direct-from-Factory Furniture",
     description:
       "Factory-priced wardrobes, beds, sofas, and complete room sets. Built in Wayanad, delivered across Kerala.",
