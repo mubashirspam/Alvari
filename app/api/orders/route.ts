@@ -5,7 +5,7 @@ import { products, productVariants, promoCodes } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { insertOrderWithItems } from "@/features/orders/repositories/order-repository";
 import { mapOrder, generateShortCode } from "@/features/orders/types";
-import { sendOrderConfirmationEmail, sendAdminOrderAlert } from "@/lib/email/send-order-email";
+import { sendOrderConfirmationEmail } from "@/lib/email/send-order-email";
 import { env } from "@/lib/env";
 
 const itemSchema = z.object({
@@ -167,9 +167,8 @@ export async function POST(req: NextRequest) {
       .where(eq(promoCodes.code, data.promoCode));
   }
 
-  // Fire-and-forget notifications
+  // Send confirmation email to customer only (if email provided)
   void sendOrderConfirmationEmail(order, siteUrl);
-  void sendAdminOrderAlert(order);
 
   return NextResponse.json({ shortCode: order.shortCode }, { status: 201 });
 }
