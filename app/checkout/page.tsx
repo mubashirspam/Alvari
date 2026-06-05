@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -39,11 +39,13 @@ const INIT: FormData = {
 type FieldErrors = Partial<Record<keyof FormData | "items" | "root", string>>;
 
 function Field({
+  id,
   label,
   required,
   error,
   children,
 }: {
+  id?: string;
   label: string;
   required?: boolean;
   error?: string;
@@ -51,44 +53,53 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-muted)]">
+      <label
+        htmlFor={id}
+        className="text-[11px] font-semibold uppercase tracking-[0.15em] text-[var(--color-muted)]"
+      >
         {label}
         {required && <span className="ml-1 text-[var(--color-accent)]">*</span>}
       </label>
       {children}
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="mt-0.5 text-xs font-medium text-red-500">{error}</p>}
     </div>
   );
 }
 
 function Input({
+  id,
   value,
   onChange,
   placeholder,
   type = "text",
   inputMode,
   maxLength,
+  autoComplete,
   error,
 }: {
+  id?: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   maxLength?: number;
+  autoComplete?: string;
   error?: boolean;
 }) {
   return (
     <input
+      id={id}
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       inputMode={inputMode}
       maxLength={maxLength}
+      autoComplete={autoComplete}
       className={`w-full rounded-xl border bg-[var(--color-bg)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] outline-none transition-colors focus:border-[var(--color-accent)] ${
         error
-          ? "border-red-400"
+          ? "border-red-400 bg-red-50/30"
           : "border-[var(--color-line)] hover:border-[var(--color-muted)]"
       }`}
     />
@@ -111,6 +122,7 @@ export default function CheckoutPage() {
   const [customOrder, setCustomOrder] = useState<CustomOrderData>(CUSTOM_EMPTY);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const [promoInput, setPromoInput] = useState("");
   const [promoApplied, setPromoApplied] = useState<{ code: string; discountRupees: number; label: string } | null>(null);
   const [promoError, setPromoError] = useState("");
@@ -177,19 +189,28 @@ export default function CheckoutPage() {
   function validate(): boolean {
     const errs: FieldErrors = {};
     if (!form.customerName.trim() || form.customerName.trim().length < 2)
-      errs.customerName = "Enter your full name";
+      errs.customerName = "Please enter your full name";
     const phone = form.customerPhone.replace(/\D/g, "");
-    if (phone.length < 10) errs.customerPhone = "Enter a valid 10-digit number";
+    if (phone.length < 10) errs.customerPhone = "Please enter a valid 10-digit WhatsApp number";
     if (form.customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.customerEmail))
-      errs.customerEmail = "Enter a valid email";
+      errs.customerEmail = "Please enter a valid email address";
     if (!form.addressLine.trim() || form.addressLine.trim().length < 5)
-      errs.addressLine = "Enter your house / building name or number";
-    if (!form.city.trim()) errs.city = "Enter your city or town";
-    if (!form.district.trim()) errs.district = "Enter your district";
+      errs.addressLine = "Please enter your house / building name or number";
+    if (!form.city.trim()) errs.city = "Please enter your city or town";
+    if (!form.district.trim()) errs.district = "Please enter your district";
     if (!/^\d{6}$/.test(form.pincode.replace(/\D/g, "")))
-      errs.pincode = "Enter a valid 6-digit pincode";
+      errs.pincode = "Please enter a valid 6-digit pincode";
     if (items.length === 0) errs.items = "Your cart is empty";
     setErrors(errs);
+
+    // Scroll to first error field
+    if (Object.keys(errs).length > 0) {
+      const firstKey = Object.keys(errs)[0];
+      const el = document.getElementById(`field-${firstKey}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+    }
+
     return Object.keys(errs).length === 0;
   }
 
@@ -289,7 +310,7 @@ export default function CheckoutPage() {
           Checkout
         </h1>
 
-        <form onSubmit={handleSubmit} noValidate>
+        <form ref={formRef} onSubmit={handleSubmit} noValidate autoComplete="on">
           <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
             {/* ── Left: Delivery details ── */}
             <div className="space-y-8">
@@ -300,44 +321,51 @@ export default function CheckoutPage() {
                 </h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
-                    <Field label="Full name" required error={errors.customerName}>
+                    <Field id="field-customerName" label="Full name" required error={errors.customerName}>
                       <Input
+                        id="field-customerName"
                         value={form.customerName}
                         onChange={set("customerName")}
-                        placeholder="Eg: Rajan Pillai"
+                        placeholder="Full name"
+                        autoComplete="name"
                         error={!!errors.customerName}
                       />
                     </Field>
                   </div>
-                  <Field label="WhatsApp number" required error={errors.customerPhone}>
+                  <Field id="field-customerPhone" label="WhatsApp number" required error={errors.customerPhone}>
                     <div className="flex">
                       <span className="flex items-center rounded-l-xl border border-r-0 border-[var(--color-line)] bg-[var(--color-bg)] px-3 text-sm text-[var(--color-muted)]">
                         +91
                       </span>
                       <input
+                        id="field-customerPhone"
                         type="tel"
                         value={form.customerPhone}
                         onChange={(e) => set("customerPhone")(e.target.value)}
-                        placeholder="9400 123456"
+                        placeholder="WhatsApp number"
                         inputMode="tel"
                         maxLength={15}
+                        autoComplete="tel-national"
+                        name="tel"
                         className={`w-full rounded-r-xl border bg-[var(--color-bg)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] outline-none transition-colors focus:border-[var(--color-accent)] ${
                           errors.customerPhone
-                            ? "border-red-400"
+                            ? "border-red-400 bg-red-50/30"
                             : "border-[var(--color-line)] hover:border-[var(--color-muted)]"
                         }`}
                       />
                     </div>
                     {errors.customerPhone && (
-                      <p className="mt-1 text-xs text-red-500">{errors.customerPhone}</p>
+                      <p className="mt-0.5 text-xs font-medium text-red-500">{errors.customerPhone}</p>
                     )}
                   </Field>
-                  <Field label="Email (optional)" error={errors.customerEmail}>
+                  <Field id="field-customerEmail" label="Email (optional)" error={errors.customerEmail}>
                     <Input
+                      id="field-customerEmail"
                       type="email"
                       value={form.customerEmail}
                       onChange={set("customerEmail")}
-                      placeholder="For order confirmation"
+                      placeholder="Email address"
+                      autoComplete="email"
                       error={!!errors.customerEmail}
                     />
                   </Field>
@@ -351,46 +379,56 @@ export default function CheckoutPage() {
                 </h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
-                    <Field label="House / Building / Street" required error={errors.addressLine}>
+                    <Field id="field-addressLine" label="House / Building / Street" required error={errors.addressLine}>
                       <Input
+                        id="field-addressLine"
                         value={form.addressLine}
                         onChange={set("addressLine")}
-                        placeholder="House no., building name, street"
+                        placeholder="House number, building name, street"
+                        autoComplete="address-line1"
                         error={!!errors.addressLine}
                       />
                     </Field>
                   </div>
-                  <Field label="Pincode" required error={errors.pincode}>
+                  <Field id="field-pincode" label="Pincode" required error={errors.pincode}>
                     <Input
+                      id="field-pincode"
                       value={form.pincode}
                       onChange={set("pincode")}
-                      placeholder="673121"
+                      placeholder="6-digit pincode"
                       inputMode="numeric"
                       maxLength={6}
+                      autoComplete="postal-code"
                       error={!!errors.pincode}
                     />
                   </Field>
-                  <Field label="City / Town" required error={errors.city}>
+                  <Field id="field-city" label="City / Town" required error={errors.city}>
                     <Input
+                      id="field-city"
                       value={form.city}
                       onChange={set("city")}
-                      placeholder="Kalpetta"
+                      placeholder="City or town"
+                      autoComplete="address-level2"
                       error={!!errors.city}
                     />
                   </Field>
-                  <Field label="District" required error={errors.district}>
+                  <Field id="field-district" label="District" required error={errors.district}>
                     <Input
+                      id="field-district"
                       value={form.district}
                       onChange={set("district")}
-                      placeholder="Wayanad"
+                      placeholder="District"
+                      autoComplete="address-level1"
                       error={!!errors.district}
                     />
                   </Field>
                   <Field label="State">
                     <Input
+                      id="field-state"
                       value={form.state}
                       onChange={set("state")}
-                      placeholder="Kerala"
+                      placeholder="State"
+                      autoComplete="address-level1"
                     />
                   </Field>
                 </div>
@@ -405,11 +443,13 @@ export default function CheckoutPage() {
                   </span>
                 </h2>
                 <textarea
+                  id="field-notes"
                   value={form.notes}
                   onChange={(e) => set("notes")(e.target.value)}
-                  placeholder="Any special requirements — dimensions, wood type, colour preference, delivery instructions…"
+                  placeholder="Special requirements, delivery instructions, preferred timeline…"
                   rows={3}
                   maxLength={2000}
+                  autoComplete="off"
                   className="w-full resize-y rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] outline-none transition-colors focus:border-[var(--color-accent)] hover:border-[var(--color-muted)]"
                 />
               </section>
