@@ -21,6 +21,8 @@ const envSchema = z.object({
   STAGING_PASSWORD: z.string().optional(),
   SENTRY_DSN: z.string().url().optional(),
   NEXT_PUBLIC_ENV_MODE: z.enum(["production", "staging", "development"]).optional(),
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().optional(),
 });
 
 export const env = envSchema.parse({
@@ -45,6 +47,8 @@ export const env = envSchema.parse({
   STAGING_PASSWORD: process.env.STAGING_PASSWORD,
   SENTRY_DSN: process.env.SENTRY_DSN,
   NEXT_PUBLIC_ENV_MODE: process.env.NEXT_PUBLIC_ENV_MODE,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
 });
 
 export type EnvMode = "production" | "staging" | "development";

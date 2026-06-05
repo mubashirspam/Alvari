@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import {
   blogPosts,
   enquiries,
+  orders,
   productVariants,
   products,
 } from "@/lib/db/schema";
@@ -15,6 +16,8 @@ export type AdminCounts = {
   publishedPosts: number;
   enquiriesOpen: number;
   enquiriesTotal: number;
+  ordersPending: number;
+  ordersTotal: number;
 };
 
 export async function getAdminCounts(): Promise<AdminCounts> {
@@ -26,6 +29,8 @@ export async function getAdminCounts(): Promise<AdminCounts> {
     [blogPublished],
     [enquiryOpen],
     [enquiryTotal],
+    [orderPending],
+    [orderTotal],
   ] = await Promise.all([
     db.select({ c: count() }).from(products),
     db.select({ c: count() }).from(products).where(eq(products.isActive, true)),
@@ -40,6 +45,11 @@ export async function getAdminCounts(): Promise<AdminCounts> {
       .from(enquiries)
       .where(sql`${enquiries.status} in ('new','contacted','quoted')`),
     db.select({ c: count() }).from(enquiries),
+    db
+      .select({ c: count() })
+      .from(orders)
+      .where(eq(orders.status, "pending")),
+    db.select({ c: count() }).from(orders),
   ]);
 
   return {
@@ -50,6 +60,8 @@ export async function getAdminCounts(): Promise<AdminCounts> {
     publishedPosts: Number(blogPublished?.c ?? 0),
     enquiriesOpen: Number(enquiryOpen?.c ?? 0),
     enquiriesTotal: Number(enquiryTotal?.c ?? 0),
+    ordersPending: Number(orderPending?.c ?? 0),
+    ordersTotal: Number(orderTotal?.c ?? 0),
   };
 }
 

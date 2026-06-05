@@ -75,6 +75,7 @@ export function SiteNav({ variant = "standalone", categoryTree = [] }: Props) {
             )
       }
       onMouseLeave={() => setHovered(null)}
+      
     >
       {/* ── Main nav row ── */}
       <nav className="relative w-full py-3">

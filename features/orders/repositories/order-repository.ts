@@ -72,12 +72,13 @@ export async function findItemsForOrderIds(
   return byOrder;
 }
 
-export async function findAllForAdmin(limit = 200): Promise<OrderRow[]> {
-  return db
-    .select()
-    .from(orders)
-    .orderBy(desc(orders.createdAt))
-    .limit(limit);
+export async function findAllForAdmin(
+  limit = 200,
+  status?: OrderStatus,
+): Promise<OrderRow[]> {
+  const q = db.select().from(orders).orderBy(desc(orders.createdAt)).limit(limit);
+  if (status) return q.where(eq(orders.status, status));
+  return q;
 }
 
 export async function findByPhone(phone: string): Promise<OrderRow[]> {

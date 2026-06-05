@@ -1,0 +1,149 @@
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { db } from "@/lib/db";
+import { products, productVariants } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { insertOrderWithItems } from "@/features/orders/repositories/order-repository";
+import { mapOrder, generateShortCode } from "@/features/orders/types";
+import { sendOrderConfirmationEmail, sendAdminOrderAlert } from "@/lib/email/send-order-email";
+import { env } from "@/lib/env";
+
+const itemSchema = z.object({
+  productId: z.string().uuid(),
+  variantId: z.string().uuid().nullable().optional(),
+  productSlug: z.string(),
+  productName: z.string(),
+  variantSku: z.string().nullable().optional(),
+  variantName: z.string().nullable().optional(),
+  unitPrice: z.number().positive(),
+  quantity: z.number().int().min(1).max(99),
+  imageUrl: z.string().nullable().optional(),
+});
+
+const orderSchema = z.object({
+  customerName: z.string().trim().min(2).max(120),
+  customerPhone: z.string().trim().min(8).max(20),
+  customerEmail: z.string().trim().email().max(160).optional().or(z.literal("")).nullable(),
+  addressLine: z.string().trim().min(3).max(500),
+  city: z.string().trim().min(2).max(100),
+  district: z.string().trim().min(2).max(100),
+  state: z.string().trim().min(2).max(100),
+  pincode: z.string().trim().regex(/^\d{6}$/, "Enter a valid 6-digit pincode"),
+  notes: z.string().trim().max(2000).optional().nullable(),
+  items: z.array(itemSchema).min(1),
+});
+
+export async function POST(req: NextRequest) {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const parsed = orderSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", issues: parsed.error.flatten().fieldErrors },
+      { status: 422 },
+    );
+  }
+
+  const data = parsed.data;
+  const shippingAddress = [
+    data.addressLine,
+    data.city,
+    data.district,
+    data.state,
+    data.pincode,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  // Verify prices server-side against DB to prevent tampering
+  const verifiedItems: Array<{
+    productId: string;
+    productSlug: string;
+    productName: string;
+    variantId: string | null;
+    variantSku: string | null;
+    variantName: string | null;
+    unitPriceInPaise: number;
+    quantity: number;
+    lineTotalInPaise: number;
+    imageUrl: string | null;
+  }> = [];
+
+  for (const item of data.items) {
+    let unitPriceInPaise: number;
+
+    if (item.variantId) {
+      const [variant] = await db
+        .select({ priceNowInPaise: productVariants.priceNowInPaise })
+        .from(productVariants)
+        .where(eq(productVariants.id, item.variantId))
+        .limit(1);
+      if (!variant) {
+        return NextResponse.json(
+          { error: `Variant not found: ${item.variantId}` },
+          { status: 422 },
+        );
+      }
+      unitPriceInPaise = variant.priceNowInPaise;
+    } else {
+      const [product] = await db
+        .select({ priceNowInPaise: products.priceNowInPaise })
+        .from(products)
+        .where(eq(products.id, item.productId))
+        .limit(1);
+      if (!product) {
+        return NextResponse.json(
+          { error: `Product not found: ${item.productId}` },
+          { status: 422 },
+        );
+      }
+      unitPriceInPaise = product.priceNowInPaise;
+    }
+
+    verifiedItems.push({
+      productId: item.productId,
+      productSlug: item.productSlug,
+      productName: item.productName,
+      variantId: item.variantId ?? null,
+      variantSku: item.variantSku ?? null,
+      variantName: item.variantName ?? null,
+      unitPriceInPaise,
+      quantity: item.quantity,
+      lineTotalInPaise: unitPriceInPaise * item.quantity,
+      imageUrl: item.imageUrl ?? null,
+    });
+  }
+
+  const subtotalInPaise = verifiedItems.reduce((s, it) => s + it.lineTotalInPaise, 0);
+  const shortCode = generateShortCode();
+
+  const { order: orderRow, items: itemRows } = await insertOrderWithItems(
+    {
+      shortCode,
+      customerName: data.customerName,
+      customerPhone: data.customerPhone,
+      customerEmail: data.customerEmail || null,
+      shippingAddress,
+      notes: data.notes ?? null,
+      subtotalInPaise,
+      totalInPaise: subtotalInPaise,
+      status: "pending",
+      placedVia: "website",
+    },
+    verifiedItems,
+  );
+
+  const order = mapOrder(orderRow, itemRows);
+  const siteUrl = env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+  // Fire-and-forget notifications
+  void sendOrderConfirmationEmail(order, siteUrl);
+  void sendAdminOrderAlert(order);
+
+  return NextResponse.json({ shortCode: order.shortCode }, { status: 201 });
+}

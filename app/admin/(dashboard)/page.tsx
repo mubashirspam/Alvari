@@ -22,6 +22,12 @@ export default async function AdminDashboardPage() {
 
   const cards: StatCard[] = [
     {
+      label: "Pending orders",
+      primary: `${counts.ordersPending}`,
+      secondary: `${counts.ordersTotal} total orders`,
+      href: "/admin/orders",
+    },
+    {
       label: "Products",
       primary: `${counts.activeProducts}`,
       secondary: `${counts.products} total · ${counts.variants} variants`,
@@ -52,7 +58,7 @@ export default async function AdminDashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         {cards.map((card) => (
           <Link
             key={card.label}
