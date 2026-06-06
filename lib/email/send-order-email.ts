@@ -36,9 +36,9 @@ function orderEmailHtml(order: Order, siteUrl: string): string {
 <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;max-width:600px">
   <!-- Header -->
   <tr><td style="background:#1a1a1a;padding:32px 40px;text-align:center">
-    <p style="margin:0;color:#d4a853;font-size:11px;letter-spacing:3px;text-transform:uppercase">Alvari Furniture</p>
-    <h1 style="margin:8px 0 0;color:#fff;font-size:28px;font-weight:400">Order Confirmed</h1>
-    <p style="margin:8px 0 0;color:#999;font-size:14px">#${order.shortCode}</p>
+    <img src="https://alvari.in/logo-white.svg" alt="Alvari" width="140" height="27" style="display:block;margin:0 auto 20px;border:0" />
+    <h1 style="margin:0 0 6px;color:#fff;font-size:22px;font-weight:400;letter-spacing:0.02em">Order Confirmed</h1>
+    <p style="margin:0;color:#999;font-size:14px">#${order.shortCode}</p>
   </td></tr>
 
   <!-- Body -->
