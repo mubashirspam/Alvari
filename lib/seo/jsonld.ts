@@ -173,7 +173,15 @@ export function localBusinessJsonLd(): JsonLd {
   };
 }
 
-export function productJsonLd(product: Product): JsonLd {
+export type ProductRatingInfo = {
+  average: number;
+  count: number;
+};
+
+export function productJsonLd(
+  product: Product,
+  rating?: ProductRatingInfo,
+): JsonLd {
   const url = absoluteUrl(`/products/${product.slug}`);
   const images = productImages(product);
   const inStock = product.variants.some((v) => v.stock > 0) || product.variants.length === 0;
@@ -228,6 +236,17 @@ export function productJsonLd(product: Product): JsonLd {
     image: images,
     url,
     offers,
+    ...(rating && rating.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: rating.average,
+            reviewCount: rating.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
   };
 }
 

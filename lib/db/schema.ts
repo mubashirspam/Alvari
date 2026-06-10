@@ -639,6 +639,59 @@ export type NewOrderItemRow = typeof orderItems.$inferInsert;
 export type OrderStatus = OrderRow["status"];
 
 // ────────────────────────────────────────────────────────────────────────────
+// Product reviews
+// ────────────────────────────────────────────────────────────────────────────
+
+export const reviewStatusEnum = pgEnum("review_status", [
+  "approved",
+  "hidden",
+]);
+
+export const productReviews = pgTable(
+  "product_reviews",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    authorName: text("author_name").notNull(),
+    /** 1–5, validated in the service layer. */
+    rating: integer("rating").notNull(),
+    /** Quick-phrase chips selected by the reviewer (e.g. "Great build quality"). */
+    highlights: text("highlights").array().notNull().default([]),
+    comment: text("comment").notNull(),
+    status: reviewStatusEnum("status").notNull().default("approved"),
+    adminReply: text("admin_reply"),
+    adminRepliedAt: timestamp("admin_replied_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("product_reviews_product_idx").on(
+      table.productId,
+      table.status,
+      table.createdAt,
+    ),
+    index("product_reviews_status_idx").on(table.status, table.createdAt),
+  ],
+);
+
+export const productReviewsRelations = relations(productReviews, ({ one }) => ({
+  product: one(products, {
+    fields: [productReviews.productId],
+    references: [products.id],
+  }),
+}));
+
+export type ProductReviewRow = typeof productReviews.$inferSelect;
+export type NewProductReviewRow = typeof productReviews.$inferInsert;
+export type ReviewStatus = ProductReviewRow["status"];
+
+// ────────────────────────────────────────────────────────────────────────────
 // Referrals + Promo codes
 // ────────────────────────────────────────────────────────────────────────────
 

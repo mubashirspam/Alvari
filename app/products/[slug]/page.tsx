@@ -15,6 +15,8 @@ import {
   ProductLongDescription,
 } from "@/features/products/components/product-story";
 import { getProductBySlug } from "@/features/products/services/product-service";
+import { ReviewsSection } from "@/features/reviews/components/reviews-section";
+import { getProductReviews } from "@/features/reviews/services/review-service";
 import { CATEGORY_LABEL } from "@/features/products/types";
 import { breadcrumbJsonLd, productJsonLd, faqJsonLd } from "@/lib/seo/jsonld";
 
@@ -82,6 +84,8 @@ export default async function ProductDetailPage({
 
   if (!product) notFound();
 
+  const { summary: reviewSummary } = await getProductReviews(product.id);
+
   const inStock = product.variants.some((v) => v.stock > 0) || product.variants.length === 0;
   const deliveryWeeks = inStock ? "2–4" : "4–8";
 
@@ -109,7 +113,7 @@ export default async function ProductDetailPage({
   ]);
 
   const jsonLd = [
-    productJsonLd(product),
+    productJsonLd(product, reviewSummary),
     productFaq,
     breadcrumbJsonLd([
       { name: "Home", path: "/" },
@@ -144,6 +148,7 @@ export default async function ProductDetailPage({
           <ProductLongDescription product={product} />
           <ProductSpecs product={product} />
           <ProductBlogSections sections={product.blogSections} />
+          <ReviewsSection productId={product.id} productSlug={product.slug} />
         </section>
 
         <section id="enquiry" className="bg-[var(--color-bg-soft)] py-24">

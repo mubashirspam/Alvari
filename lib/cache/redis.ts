@@ -50,3 +50,23 @@ export async function invalidate(...keys: string[]): Promise<void> {
     // No-op on failure.
   }
 }
+
+/**
+ * Fixed-window rate limiter. Returns true when the call is allowed.
+ * Fails open (allows) when Redis is unavailable so the feature keeps working.
+ */
+export async function rateLimit(
+  key: string,
+  limit: number,
+  windowSeconds: number,
+): Promise<boolean> {
+  const redis = getClient();
+  if (!redis) return true;
+  try {
+    const count = await redis.incr(`rl:${key}`);
+    if (count === 1) await redis.expire(`rl:${key}`, windowSeconds);
+    return count <= limit;
+  } catch {
+    return true;
+  }
+}

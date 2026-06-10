@@ -10,6 +10,7 @@ export const cacheKeys = {
   bannersBySlot: (slot: string) => `banners:slot:v1:${slot}`,
   collectionsFeatured: "collections:featured:v1",
   collectionBySlug: (slug: string) => `collections:slug:v1:${slug}`,
+  reviewsByProduct: (productId: string) => `reviews:product:v1:${productId}`,
 } as const;
 
 export const cacheTtl = {
@@ -18,4 +19,5 @@ export const cacheTtl = {
   categories: 60 * 30,
   banners: 60 * 5,
   collections: 60 * 10,
+  reviews: 60 * 5,
 } as const;
