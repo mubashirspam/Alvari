@@ -10,8 +10,8 @@ Two environments. `staging` branch = active dev. `main` branch = production. One
 |---|---|---|
 | Git branch | `staging` | `main` |
 | URL (when live) | `staging.alvari.com` | `alvari.com` |
-| Neon branch | `main` (id `br-bitter-lab-aj4zu36r`) | `production` (id `br-dark-block-ajksurrk`) |
-| DB host | `ep-rapid-mud-aj0qn10h-pooler.c-3.us-east-2.aws.neon.tech` | `ep-still-cell-aj0mqxfq-pooler.c-3.us-east-2.aws.neon.tech` |
+| Neon branch | `main` | `production` |
+| DB host | see `.env.staging` (never commit) | see `.env.production` (never commit) |
 | Image folder | `/staging/kaasth/products` | `/prod/kaasth/products` |
 | Cron | skipped | runs Tue+Fri 9am IST |
 | Redis | (TBD: `alvari-staging`) | (TBD: `alvari-prod`) |
@@ -105,15 +105,11 @@ Neon Console → branches → `main` → "Reset from parent" (parent = `producti
 
 ## Connection strings
 
-**Staging** (Neon `main` branch):
-```
-postgresql://neondb_owner:npg_o2RMGc0vbeWl@ep-rapid-mud-aj0qn10h-pooler.c-3.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require
-```
+**Never commit connection strings to this repo.** They live in:
 
-**Production** (Neon `production` branch):
-```
-postgresql://neondb_owner:npg_o2RMGc0vbeWl@ep-still-cell-aj0mqxfq-pooler.c-3.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require
-```
+- Locally: `DATABASE_URL` in `.env.staging` / `.env.production` (gitignored)
+- Vercel: Settings → Environment Variables (`DATABASE_URL`, scoped per environment)
+- Source of truth: Neon Console → project → branch → "Connection string"
 
 ---
 

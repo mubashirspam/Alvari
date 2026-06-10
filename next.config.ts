@@ -11,9 +11,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
-  async rewrites() {
-    return [{ source: "/docs", destination: "/docs.html" }];
-  },
 };
 
 export default nextConfig;
