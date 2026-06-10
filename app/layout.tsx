@@ -3,7 +3,7 @@ import { DM_Sans, Montserrat } from "next/font/google";
 import { JsonLd } from "@/components/seo/json-ld";
 import { CartDrawer } from "@/features/cart/components/cart-drawer";
 import { PageTracker } from "@/components/analytics/page-tracker";
-import { siteConfig } from "@/lib/env";
+import { env, siteConfig } from "@/lib/env";
 import { localBusinessJsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
 import "./globals.css";
 
@@ -68,8 +68,20 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const imagekitOrigin = env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+    ? new URL(env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT).origin
+    : null;
+
   return (
     <html lang="en" className={`${dmSans.variable} ${montserrat.variable}`}>
+      <head>
+        {imagekitOrigin && (
+          <>
+            <link rel="preconnect" href={imagekitOrigin} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={imagekitOrigin} />
+          </>
+        )}
+      </head>
       <body>
         <JsonLd data={[organizationJsonLd(), localBusinessJsonLd(), websiteJsonLd()]} />
         {children}

@@ -4,6 +4,7 @@ import {
   adminFindAllPosts,
 } from "@/features/admin/repositories/blog-admin-repository";
 import { requireAdmin } from "@/lib/auth/session";
+import { submitToIndexNow } from "@/lib/seo/indexnow";
 
 export async function GET() {
   try {
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
     const row = await adminCreatePost(
       body as Parameters<typeof adminCreatePost>[0],
     );
+    if (row.isPublished) submitToIndexNow([`/blog/${row.slug}`, "/blog"]);
     return NextResponse.json({ post: row }, { status: 201 });
   } catch (error) {
     return NextResponse.json(

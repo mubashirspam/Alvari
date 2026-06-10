@@ -5,6 +5,7 @@ import {
   adminUpdateProduct,
 } from "@/features/admin/repositories/product-admin-repository";
 import { requireAdmin } from "@/lib/auth/session";
+import { submitToIndexNow } from "@/lib/seo/indexnow";
 
 type Params = Promise<{ id: string }>;
 
@@ -36,6 +37,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
   try {
     const row = await adminUpdateProduct(id, body as Parameters<typeof adminUpdateProduct>[1]);
     if (!row) return NextResponse.json({ message: "Not found" }, { status: 404 });
+    submitToIndexNow([`/products/${row.slug}`, "/products"]);
     return NextResponse.json({ product: row });
   } catch (error) {
     console.error("[admin/products/:id] update failed", error);

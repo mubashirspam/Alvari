@@ -34,21 +34,39 @@ export async function generateMetadata({
   }
   const ogPath = `/og/product/${product.slug}`;
   const url = `/products/${product.slug}`;
+
+  // Title pattern: "{Name} – {Material} {Category} | Alvari Kerala", trimmed to
+  // ~60 chars. The "%s · Alvari" template in the root layout still applies, so
+  // we keep the brand suffix concise here and let truncation guard length.
+  const categoryLabel = CATEGORY_LABEL[product.category];
+  const descriptor = [product.material, categoryLabel].filter(Boolean).join(" ");
+  const fullTitle = `${product.name} – ${descriptor} | Alvari Kerala`;
+  const title = fullTitle.length <= 60 ? fullTitle : `${product.name} – ${categoryLabel}`;
+
+  // Description: lead with price + material, close with the factory-direct +
+  // Kerala-delivery hook. Clamp to ~160 chars.
+  const priceText = `from ₹${Math.round(product.priceNow).toLocaleString("en-IN")}`;
+  const rawDescription = `${product.name} — ${priceText}${
+    product.material ? `, ${product.material}` : ""
+  }. Direct from our Wayanad factory, delivered across Kerala. ${product.description}`;
+  const description =
+    rawDescription.length <= 160 ? rawDescription : `${rawDescription.slice(0, 157).trimEnd()}…`;
+
   return {
-    title: product.name,
-    description: product.description,
+    title,
+    description,
     alternates: { canonical: url },
     openGraph: {
-      title: product.name,
-      description: product.description,
+      title,
+      description,
       url,
       type: "website",
       images: [{ url: ogPath, width: 1200, height: 630, alt: product.name }],
     },
     twitter: {
       card: "summary_large_image",
-      title: product.name,
-      description: product.description,
+      title,
+      description,
       images: [ogPath],
     },
   };

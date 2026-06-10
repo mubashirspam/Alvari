@@ -23,6 +23,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_ENV_MODE: z.enum(["production", "staging", "development"]).optional(),
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().optional(),
+  INDEXNOW_KEY: z.string().optional(),
 });
 
 export const env = envSchema.parse({
@@ -49,6 +50,7 @@ export const env = envSchema.parse({
   NEXT_PUBLIC_ENV_MODE: process.env.NEXT_PUBLIC_ENV_MODE,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+  INDEXNOW_KEY: process.env.INDEXNOW_KEY,
 });
 
 export type EnvMode = "production" | "staging" | "development";

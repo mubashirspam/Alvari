@@ -1,8 +1,24 @@
 import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/env";
+import { buildImageKitUrl } from "@/lib/imagekit";
 import { getAllProducts } from "@/features/products/services/product-service";
 import { getPublishedPosts } from "@/features/blog/services/blog-service";
-import { CATEGORY_LABEL, type ProductCategory } from "@/features/products/types";
+import {
+  CATEGORY_LABEL,
+  type Product,
+  type ProductCategory,
+} from "@/features/products/types";
+
+// Google Images is a major furniture-discovery channel, so we surface up to
+// five product images per URL in the sitemap (the <image:image> extension).
+function productImageUrls(p: Product): string[] {
+  const keys = p.images.map((img) => img.imageKey);
+  const fallback = p.imageUrl ?? p.illustrationKey;
+  if (keys.length === 0 && fallback) keys.push(fallback);
+  return keys
+    .slice(0, 5)
+    .map((key) => buildImageKitUrl(key, { width: 1200, format: "auto" }));
+}
 
 export const revalidate = 3600;
 
@@ -41,12 +57,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]);
     products = productList
       .filter((p) => p.isActive)
-      .map((p) => ({
-        url: url(`/products/${p.slug}`),
-        lastModified: now,
-        changeFrequency: "weekly" as const,
-        priority: p.isFeatured ? 0.9 : 0.8,
-      }));
+      .map((p) => {
+        const images = productImageUrls(p);
+        return {
+          url: url(`/products/${p.slug}`),
+          lastModified: now,
+          changeFrequency: "weekly" as const,
+          priority: p.isFeatured ? 0.9 : 0.8,
+          ...(images.length > 0 ? { images } : {}),
+        };
+      });
     posts = postList.map((p) => ({
       url: url(`/blog/${p.slug}`),
       lastModified: p.publishedAt ?? now,

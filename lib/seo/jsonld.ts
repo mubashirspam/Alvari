@@ -15,10 +15,77 @@ function absoluteUrl(path: string): string {
   return `${base}${suffix}`;
 }
 
-function productImageUrl(product: Product): string {
-  const primary = product.images[0]?.imageKey ?? product.imageUrl ?? product.illustrationKey;
-  if (!primary) return absoluteUrl("/og-default.png");
-  return buildImageKitUrl(primary, { width: 1200, format: "auto" });
+/**
+ * Google recommends ≥3 product images, ideally in multiple aspect ratios
+ * (1:1, 4:3, 16:9). We emit the distinct catalog images we have, then top up
+ * to three by deriving aspect-ratio crops of the primary image via ImageKit.
+ */
+function productImages(product: Product): string[] {
+  const keys = product.images.map((img) => img.imageKey);
+  const fallback = product.imageUrl ?? product.illustrationKey;
+  if (keys.length === 0 && fallback) keys.push(fallback);
+  if (keys.length === 0) return [absoluteUrl("/og-default.png")];
+
+  const urls = keys.map((key) => buildImageKitUrl(key, { width: 1200, format: "auto" }));
+
+  if (urls.length < 3) {
+    const primary = keys[0];
+    const ratios: Array<{ width: number; height: number }> = [
+      { width: 1200, height: 1200 }, // 1:1
+      { width: 1200, height: 900 }, // 4:3
+      { width: 1200, height: 675 }, // 16:9
+    ];
+    for (const r of ratios) {
+      if (urls.length >= 3) break;
+      urls.push(buildImageKitUrl(primary, { ...r, format: "auto", focus: "auto" }));
+    }
+  }
+
+  return urls;
+}
+
+function shippingDetails(): JsonLd {
+  return {
+    "@type": "OfferShippingDetails",
+    shippingDestination: {
+      "@type": "DefinedRegion",
+      addressCountry: "IN",
+      addressRegion: siteConfig.address.region,
+    },
+    deliveryTime: {
+      "@type": "ShippingDeliveryTime",
+      handlingTime: {
+        "@type": "QuantitativeValue",
+        minValue: 7,
+        maxValue: 21,
+        unitCode: "DAY",
+      },
+      transitTime: {
+        "@type": "QuantitativeValue",
+        minValue: 2,
+        maxValue: 7,
+        unitCode: "DAY",
+      },
+    },
+  };
+}
+
+function returnPolicy(): JsonLd {
+  return {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "IN",
+    returnPolicyCategory:
+      "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: 7,
+    returnMethod: "https://schema.org/ReturnByMail",
+    returnFees: "https://schema.org/FreeReturn",
+  };
+}
+
+function priceValidUntil(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  return d.toISOString().split("T")[0];
 }
 
 export function organizationJsonLd(): JsonLd {
@@ -31,6 +98,18 @@ export function organizationJsonLd(): JsonLd {
     url: siteConfig.url,
     logo: absoluteUrl("/logo.png"),
     sameAs: Object.values(siteConfig.socials),
+    foundingLocation: {
+      "@type": "Place",
+      name: `${siteConfig.address.locality}, ${siteConfig.address.region}`,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: siteConfig.address.locality,
+        addressRegion: siteConfig.address.region,
+        postalCode: siteConfig.address.postalCode,
+        addressCountry: siteConfig.address.country,
+      },
+    },
+    areaServed: { "@type": "State", name: siteConfig.serviceArea },
     contactPoint: [
       {
         "@type": "ContactPoint",
@@ -43,10 +122,15 @@ export function organizationJsonLd(): JsonLd {
   };
 }
 
+function googleMapsUrl(): string {
+  const { lat, lng } = siteConfig.geo;
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+}
+
 export function localBusinessJsonLd(): JsonLd {
   return {
     "@context": "https://schema.org",
-    "@type": "FurnitureStore",
+    "@type": ["FurnitureStore", "LocalBusiness"],
     "@id": `${siteConfig.url}#localbusiness`,
     name: siteConfig.name,
     description:
@@ -54,7 +138,9 @@ export function localBusinessJsonLd(): JsonLd {
     url: siteConfig.url,
     telephone: `+${siteConfig.whatsappNumber}`,
     priceRange: "₹₹",
+    currenciesAccepted: "INR",
     image: absoluteUrl("/og-default.png"),
+    hasMap: googleMapsUrl(),
     address: {
       "@type": "PostalAddress",
       addressLocality: siteConfig.address.locality,
@@ -89,8 +175,44 @@ export function localBusinessJsonLd(): JsonLd {
 
 export function productJsonLd(product: Product): JsonLd {
   const url = absoluteUrl(`/products/${product.slug}`);
-  const image = productImageUrl(product);
+  const images = productImages(product);
   const inStock = product.variants.some((v) => v.stock > 0) || product.variants.length === 0;
+  const availability = inStock
+    ? "https://schema.org/InStock"
+    : "https://schema.org/MadeToOrder";
+
+  // Shared offer fields for both Offer and AggregateOffer shapes.
+  const offerBase = {
+    priceCurrency: "INR",
+    availability,
+    itemCondition: "https://schema.org/NewCondition",
+    priceValidUntil: priceValidUntil(),
+    url,
+    seller: { "@id": `${siteConfig.url}#organization` },
+    shippingDetails: shippingDetails(),
+    hasMerchantReturnPolicy: returnPolicy(),
+  };
+
+  const defaultVariant =
+    product.variants.find((v) => v.isDefault) ?? product.variants[0];
+
+  let offers: JsonLd;
+  if (product.variants.length > 1) {
+    const prices = product.variants.map((v) => v.priceNow);
+    offers = {
+      "@type": "AggregateOffer",
+      lowPrice: Math.min(...prices),
+      highPrice: Math.max(...prices),
+      offerCount: product.variants.length,
+      ...offerBase,
+    };
+  } else {
+    offers = {
+      "@type": "Offer",
+      price: defaultVariant?.priceNow ?? product.priceNow,
+      ...offerBase,
+    };
+  }
 
   return {
     "@context": "https://schema.org",
@@ -98,23 +220,14 @@ export function productJsonLd(product: Product): JsonLd {
     "@id": `${url}#product`,
     name: product.name,
     description: product.longDescription ?? product.description,
-    sku: product.variants[0]?.sku ?? product.id,
+    sku: defaultVariant?.sku ?? product.id,
+    mpn: defaultVariant?.sku ?? product.id,
     brand: { "@type": "Brand", name: product.brand },
     category: CATEGORY_LABEL[product.category],
     material: product.material ?? undefined,
-    image,
+    image: images,
     url,
-    offers: {
-      "@type": "Offer",
-      price: product.priceNow,
-      priceCurrency: "INR",
-      url,
-      availability: inStock
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      itemCondition: "https://schema.org/NewCondition",
-      seller: { "@id": `${siteConfig.url}#organization` },
-    },
+    offers,
   };
 }
 

@@ -4,6 +4,7 @@ import { cached, invalidate } from "@/lib/cache/redis";
 import { cacheKeys, cacheTtl } from "@/lib/cache/keys";
 import { generateBlogPost } from "@/lib/content/blog-generator";
 import { TOPICS, type ContentTopic } from "@/lib/content/topics";
+import { submitToIndexNow } from "@/lib/seo/indexnow";
 
 export async function getPublishedPosts(): Promise<BlogPost[]> {
   return cached(cacheKeys.blogPublished, cacheTtl.blog, async () => {
@@ -68,6 +69,7 @@ export async function generateNextPost(): Promise<GenerationOutcome> {
   });
 
   await invalidate(cacheKeys.blogPublished, cacheKeys.blogBySlug(slug));
+  submitToIndexNow([`/blog/${slug}`, "/blog"]);
 
   return {
     status: "generated",

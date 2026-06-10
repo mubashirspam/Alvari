@@ -4,6 +4,7 @@ import {
   adminFindAllProducts,
 } from "@/features/admin/repositories/product-admin-repository";
 import { requireAdmin } from "@/lib/auth/session";
+import { submitToIndexNow } from "@/lib/seo/indexnow";
 
 export async function GET() {
   try {
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
   }
   try {
     const row = await adminCreateProduct(body as Parameters<typeof adminCreateProduct>[0]);
+    submitToIndexNow([`/products/${row.slug}`, "/products"]);
     return NextResponse.json({ product: row }, { status: 201 });
   } catch (error) {
     console.error("[admin/products] create failed", error);

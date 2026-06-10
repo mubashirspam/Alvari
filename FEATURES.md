@@ -466,7 +466,7 @@ Powered by **Resend**. All emails are fire-and-forget (never block the order flo
 Two methods accepted side-by-side — whichever is present wins:
 
 **Legacy (DB-backed cookie):**
-- Cookie: `kaasth_admin_session` (HTTP-only, 7-day TTL)
+- Cookie: `alvari_admin_session` (HTTP-only, 7-day TTL)
 - Password: scrypt hash in `admins` table
 - Login at `/admin/login`
 

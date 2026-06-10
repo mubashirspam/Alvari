@@ -5,6 +5,7 @@ import {
   adminUpdatePost,
 } from "@/features/admin/repositories/blog-admin-repository";
 import { requireAdmin } from "@/lib/auth/session";
+import { submitToIndexNow } from "@/lib/seo/indexnow";
 
 type Params = Promise<{ id: string }>;
 
@@ -39,6 +40,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
       body as Parameters<typeof adminUpdatePost>[1],
     );
     if (!row) return NextResponse.json({ message: "Not found" }, { status: 404 });
+    if (row.isPublished) submitToIndexNow([`/blog/${row.slug}`, "/blog"]);
     return NextResponse.json({ post: row });
   } catch (error) {
     return NextResponse.json(
