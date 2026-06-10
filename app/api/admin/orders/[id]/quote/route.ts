@@ -3,16 +3,18 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/session";
 import {
   findById,
-  updateStatus,
+  setQuote,
 } from "@/features/orders/repositories/order-repository";
-import { orderStatusEnum } from "@/lib/db/schema";
 import { assertTransition, IllegalTransitionError } from "@/lib/commerce/status";
 
-const patchSchema = z.object({
-  status: z.enum(orderStatusEnum.enumValues),
+const quoteSchema = z.object({
+  /** Final quoted amount in rupees (admin types rupees; stored as paise). */
+  quotedTotalRupees: z.number().positive().max(10_000_000),
+  adminNote: z.string().trim().max(2000).optional().nullable(),
 });
 
-export async function PATCH(
+/** Sets the admin's final quote on an enquiry: enquiry → quoted. */
+export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -21,7 +23,6 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
   const { id } = await params;
 
   let body: unknown;
@@ -30,19 +31,19 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-
-  const parsed = patchSchema.safeParse(body);
+  const parsed = quoteSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 422 });
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+      { status: 422 },
+    );
   }
 
   const order = await findById(id);
-  if (!order) {
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  }
+  if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
   try {
-    assertTransition(order.status, parsed.data.status);
+    assertTransition(order.status, "quoted");
   } catch (error) {
     if (error instanceof IllegalTransitionError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
@@ -50,10 +51,10 @@ export async function PATCH(
     throw error;
   }
 
-  const updated = await updateStatus(id, parsed.data.status);
-  if (!updated) {
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  }
-
-  return NextResponse.json({ ok: true, status: updated.status });
+  const updated = await setQuote(
+    id,
+    Math.round(parsed.data.quotedTotalRupees * 100),
+    parsed.data.adminNote ?? null,
+  );
+  return NextResponse.json({ ok: true, order: updated });
 }

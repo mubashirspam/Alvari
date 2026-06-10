@@ -101,6 +101,26 @@ export async function updateStatus(
   return updated[0] ?? null;
 }
 
+/** Quote flow: stores the admin's final amount and mirrors it onto the total. */
+export async function setQuote(
+  id: string,
+  quotedTotalInPaise: number,
+  adminNote: string | null,
+): Promise<OrderRow | null> {
+  const updated = await db
+    .update(orders)
+    .set({
+      quotedTotalInPaise,
+      totalInPaise: quotedTotalInPaise,
+      status: "quoted",
+      ...(adminNote !== null ? { adminNote } : {}),
+      updatedAt: new Date(),
+    })
+    .where(eq(orders.id, id))
+    .returning();
+  return updated[0] ?? null;
+}
+
 export async function markWhatsappOpened(id: string): Promise<void> {
   await db
     .update(orders)

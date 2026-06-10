@@ -6,6 +6,7 @@ import { findById, findItemsByOrderId } from "@/features/orders/repositories/ord
 import { mapOrder, ORDER_STATUS_LABEL } from "@/features/orders/types";
 import { formatINR } from "@/lib/utils";
 import { AdminOrderStatusSelect } from "@/features/orders/components/admin-order-status-select";
+import { AdminQuotePanel } from "@/features/orders/components/admin-quote-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,16 @@ export default async function AdminOrderDetailPage({
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* Items */}
         <div className="space-y-6">
+          {order.type === "quote" && (
+            <AdminQuotePanel
+              orderId={order.id}
+              status={order.status}
+              customerPhone={order.customerPhone}
+              shortCode={order.shortCode}
+              quotedTotal={order.quotedTotal}
+              adminNote={order.adminNote}
+            />
+          )}
           <section className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-bg-soft)] p-6">
             <h2 className="mb-4 font-serif text-xl text-[var(--color-ink)]">Items</h2>
             <table className="w-full text-sm">

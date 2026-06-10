@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { products, productVariants, promoCodes } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { insertOrderWithItems } from "@/features/orders/repositories/order-repository";
 import { mapOrder, generateShortCode } from "@/features/orders/types";
 import { sendOrderConfirmationEmail } from "@/lib/email/send-order-email";
@@ -83,6 +83,14 @@ export async function POST(req: NextRequest) {
     imageUrl: string | null;
   }> = [];
 
+  // Carts containing quote-mode products become quote enquiries: the listed
+  // price is indicative and the admin sets the final amount before payment.
+  const modeRows = await db
+    .select({ id: products.id, purchaseMode: products.purchaseMode })
+    .from(products)
+    .where(inArray(products.id, [...new Set(data.items.map((i) => i.productId))]));
+  const hasQuoteItems = modeRows.some((p) => p.purchaseMode === "quote");
+
   for (const item of data.items) {
     let unitPriceInPaise: number;
 
@@ -141,7 +149,8 @@ export async function POST(req: NextRequest) {
       notes: data.notes ?? null,
       subtotalInPaise,
       totalInPaise: Math.max(0, subtotalInPaise - (data.discountInPaise ?? 0)),
-      status: "pending",
+      type: hasQuoteItems ? "quote" : "standard",
+      status: hasQuoteItems ? "enquiry" : "pending",
       placedVia: "website",
       referralCode: data.referralCode ?? null,
       promoCode: data.promoCode ?? null,

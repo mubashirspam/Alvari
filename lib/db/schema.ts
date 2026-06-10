@@ -46,6 +46,13 @@ export const productBadgeEnum = pgEnum("product_badge", [
   "best_value",
 ]);
 
+/**
+ * How a product is bought: "instant" = pay online via Razorpay checkout;
+ * "quote" = big-ticket/custom items where the listed price is indicative and
+ * the final amount is quoted by admin (paid via Razorpay payment link).
+ */
+export const purchaseModeEnum = pgEnum("purchase_mode", ["instant", "quote"]);
+
 export const products = pgTable(
   "products",
   {
@@ -65,6 +72,14 @@ export const products = pgTable(
     priceNowInPaise: integer("price_now_in_paise").notNull(),
     priceWasInPaise: integer("price_was_in_paise").notNull(),
     badge: productBadgeEnum("badge"),
+    purchaseMode: purchaseModeEnum("purchase_mode").notNull().default("instant"),
+    /** True when the shown price is a starting point; final price is quoted. */
+    priceIsIndicative: boolean("price_is_indicative").notNull().default(false),
+    hsnCode: text("hsn_code"),
+    /** GST percent, e.g. "18.00". Null = untaxed/unknown (no tax computed). */
+    gstRate: numeric("gst_rate", { precision: 5, scale: 2 }),
+    metaTitle: text("meta_title"),
+    metaDescription: text("meta_description"),
     illustrationKey: text("illustration_key").notNull(),
     imageUrl: text("image_url"),
     gradientFrom: text("gradient_from").notNull(),
@@ -535,13 +550,25 @@ export const users = pgTable(
 );
 
 export const orderStatusEnum = pgEnum("order_status", [
+  // legacy/WhatsApp flow
   "pending",
   "confirmed",
   "in_production",
   "shipped",
   "delivered",
   "cancelled",
+  // instant (online payment) flow
+  "pending_payment",
+  "paid",
+  // quote flow
+  "enquiry",
+  "quoted",
+  "approved",
+  "rejected",
+  "ready",
 ]);
+
+export const orderTypeEnum = pgEnum("order_type", ["standard", "instant", "quote"]);
 
 export const orders = pgTable(
   "orders",
@@ -556,6 +583,14 @@ export const orders = pgTable(
     notes: text("notes"),
     subtotalInPaise: integer("subtotal_in_paise").notNull(),
     totalInPaise: integer("total_in_paise").notNull(),
+    /** standard = legacy WhatsApp flow; instant = paid online; quote = admin-quoted. */
+    type: orderTypeEnum("type").notNull().default("standard"),
+    taxInPaise: integer("tax_in_paise").notNull().default(0),
+    shippingInPaise: integer("shipping_in_paise").notNull().default(0),
+    placeOfSupplyState: text("place_of_supply_state").notNull().default("Kerala"),
+    /** Quote flow only — admin-set final amount; totalInPaise mirrors it once quoted. */
+    quotedTotalInPaise: integer("quoted_total_in_paise"),
+    adminNote: text("admin_note"),
     status: orderStatusEnum("status").notNull().default("pending"),
     placedVia: text("placed_via").notNull().default("whatsapp"),
     referralCode: text("referral_code"),
@@ -630,6 +665,87 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   }),
 }));
 
+// ────────────────────────────────────────────────────────────────────────────
+// Payments (Razorpay)
+// ────────────────────────────────────────────────────────────────────────────
+
+export const paymentStatusEnum = pgEnum("payment_status", [
+  "created",
+  "captured",
+  "failed",
+  "refunded",
+]);
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    amountInPaise: integer("amount_in_paise").notNull(),
+    status: paymentStatusEnum("status").notNull().default("created"),
+    /** Instant checkout flow. */
+    razorpayOrderId: text("razorpay_order_id").unique(),
+    /** Quote flow — payment link sent over WhatsApp. */
+    razorpayPaymentLinkId: text("razorpay_payment_link_id").unique(),
+    razorpayPaymentId: text("razorpay_payment_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("payments_order_idx").on(table.orderId),
+    index("payments_status_idx").on(table.status, table.createdAt),
+  ],
+);
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  order: one(orders, { fields: [payments.orderId], references: [orders.id] }),
+}));
+
+// ────────────────────────────────────────────────────────────────────────────
+// Free home measurement requests (lead magnet)
+// ────────────────────────────────────────────────────────────────────────────
+
+export const measurementStatusEnum = pgEnum("measurement_status", [
+  "requested",
+  "scheduled",
+  "completed",
+  "cancelled",
+]);
+
+export const measurementRequests = pgTable(
+  "measurement_requests",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    phone: text("phone").notNull(),
+    pincode: text("pincode").notNull(),
+    area: text("area"),
+    preferredSlot: text("preferred_slot"),
+    note: text("note"),
+    status: measurementStatusEnum("status").notNull().default("requested"),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    orderId: uuid("order_id").references(() => orders.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("measurement_requests_status_idx").on(table.status, table.createdAt),
+    index("measurement_requests_phone_idx").on(table.phone),
+  ],
+);
+
 export type UserRow = typeof users.$inferSelect;
 export type NewUserRow = typeof users.$inferInsert;
 export type OrderRow = typeof orders.$inferSelect;
@@ -637,6 +753,14 @@ export type NewOrderRow = typeof orders.$inferInsert;
 export type OrderItemRow = typeof orderItems.$inferSelect;
 export type NewOrderItemRow = typeof orderItems.$inferInsert;
 export type OrderStatus = OrderRow["status"];
+export type OrderType = OrderRow["type"];
+export type PurchaseMode = ProductRow["purchaseMode"];
+export type PaymentRow = typeof payments.$inferSelect;
+export type NewPaymentRow = typeof payments.$inferInsert;
+export type PaymentStatus = PaymentRow["status"];
+export type MeasurementRequestRow = typeof measurementRequests.$inferSelect;
+export type NewMeasurementRequestRow = typeof measurementRequests.$inferInsert;
+export type MeasurementStatus = MeasurementRequestRow["status"];
 
 // ────────────────────────────────────────────────────────────────────────────
 // Product reviews

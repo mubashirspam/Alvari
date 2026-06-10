@@ -8,6 +8,7 @@ import {
   collections,
   productBadgeEnum,
   productCategoryEnum,
+  purchaseModeEnum,
   productImages,
   products,
   productVariants,
@@ -175,6 +176,17 @@ async function importProductRow(
   if (weightRaw && !Number.isFinite(Number(weightRaw))) {
     fail([`weight_kg: "${weightRaw}" is not a number`]);
   }
+  const purchaseModeRaw = (record.purchase_mode ?? "").trim();
+  const purchaseMode = purchaseModeRaw
+    ? oneOf(purchaseModeRaw, purchaseModeEnum.enumValues, "purchase_mode")
+    : "instant";
+  const gstRaw = (record.gst_rate ?? "").trim();
+  if (gstRaw) {
+    const gst = Number(gstRaw);
+    if (!Number.isFinite(gst) || gst < 0 || gst > 100) {
+      fail([`gst_rate: "${gstRaw}" must be a percent between 0 and 100`]);
+    }
+  }
 
   const values: NewProductRow = {
     slug,
@@ -192,6 +204,12 @@ async function importProductRow(
     priceNowInPaise: rupeesToPaise(record.price_now_inr, "price_now_inr"),
     priceWasInPaise: rupeesToPaise(record.price_was_inr, "price_was_inr"),
     badge,
+    purchaseMode,
+    priceIsIndicative: parseBool(record.price_is_indicative ?? "", false),
+    hsnCode: (record.hsn_code ?? "").trim() || null,
+    gstRate: gstRaw ? Number(gstRaw).toFixed(2) : null,
+    metaTitle: (record.meta_title ?? "").trim() || null,
+    metaDescription: (record.meta_description ?? "").trim() || null,
     illustrationKey: (record.illustration_key ?? "").trim() || category,
     gradientFrom: (record.gradient_from ?? "").trim() || "#8B5E3C",
     gradientTo: (record.gradient_to ?? "").trim() || "#3E2818",

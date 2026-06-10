@@ -60,6 +60,12 @@ empty/default on update (the importer writes full rows, not patches).
 | `price_now_inr` | ✅ | selling price in rupees |
 | `price_was_inr` | ✅ | MRP in rupees |
 | `badge` | — | `bestseller \| new \| trending \| value_pick \| best_value` |
+| `purchase_mode` | — | `instant` (pay online) or `quote` (admin quotes the final price); default `instant` |
+| `price_is_indicative` | — | `true` when the price is a starting point; default `false` |
+| `hsn_code` | — | HSN code for GST invoicing, e.g. `9403` |
+| `gst_rate` | — | GST percent, e.g. `18` (empty = no tax computed) |
+| `meta_title` | — | SEO title override (~60 chars) |
+| `meta_description` | — | SEO meta description override (~160 chars) |
 | `illustration_key` | — | default: the category value |
 | `image_keys` | — | piped ImageKit paths; **if set, replaces the gallery** |
 | `gradient_from` | — | default `#8B5E3C` |

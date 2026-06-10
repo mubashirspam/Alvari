@@ -43,6 +43,13 @@
       "when": 1781112507709,
       "tag": "0005_tiny_senator_kelly",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781115816943,
+      "tag": "0006_ancient_piledriver",
+      "breakpoints": true
     }
   ]
 }

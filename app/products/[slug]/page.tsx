@@ -43,7 +43,9 @@ export async function generateMetadata({
   const categoryLabel = CATEGORY_LABEL[product.category];
   const descriptor = [product.material, categoryLabel].filter(Boolean).join(" ");
   const fullTitle = `${product.name} – ${descriptor} | Alvari Kerala`;
-  const title = fullTitle.length <= 60 ? fullTitle : `${product.name} – ${categoryLabel}`;
+  const autoTitle = fullTitle.length <= 60 ? fullTitle : `${product.name} – ${categoryLabel}`;
+  // Admin-set SEO overrides win over the generated title/description.
+  const title = product.metaTitle || autoTitle;
 
   // Description: lead with price + material, close with the factory-direct +
   // Kerala-delivery hook. Clamp to ~160 chars.
@@ -51,8 +53,9 @@ export async function generateMetadata({
   const rawDescription = `${product.name} — ${priceText}${
     product.material ? `, ${product.material}` : ""
   }. Direct from our Wayanad factory, delivered across Kerala. ${product.description}`;
-  const description =
+  const autoDescription =
     rawDescription.length <= 160 ? rawDescription : `${rawDescription.slice(0, 157).trimEnd()}…`;
+  const description = product.metaDescription || autoDescription;
 
   return {
     title,

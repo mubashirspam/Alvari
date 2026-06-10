@@ -64,6 +64,12 @@ export function ProductForm({ product }: Props) {
       isFeatured: fd.get("isFeatured") === "on",
       isActive: fd.get("isActive") === "on",
       sortOrder: Number(fd.get("sortOrder") ?? 0),
+      purchaseMode: fd.get("purchaseMode") || "instant",
+      priceIsIndicative: fd.get("priceIsIndicative") === "on",
+      hsnCode: fd.get("hsnCode") || null,
+      gstRate: fd.get("gstRate") ? Number(fd.get("gstRate")).toFixed(2) : null,
+      metaTitle: fd.get("metaTitle") || null,
+      metaDescription: fd.get("metaDescription") || null,
     };
 
     setSaving(true);
@@ -219,6 +225,65 @@ export function ProductForm({ product }: Props) {
         <div className="mt-4">
           <Label htmlFor="pf-care">Care instructions</Label>
           <Textarea id="pf-care" name="careInstructions" defaultValue={p?.careInstructions ?? ""} rows={3} />
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-bg-soft)] p-6">
+        <h3 className="mb-5 font-serif text-[20px] text-[var(--color-ink)]">Commerce & tax</h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <Label htmlFor="pf-purchase-mode">Purchase mode</Label>
+            <select
+              id="pf-purchase-mode"
+              name="purchaseMode"
+              defaultValue={p?.purchaseMode ?? "instant"}
+              className="w-full rounded-[4px] border border-[var(--color-line)] bg-[var(--color-bg)] px-4 py-3.5 text-[15px] text-[var(--color-ink)] focus:border-[var(--color-accent)] focus:outline-none"
+            >
+              <option value="instant">Instant — pay online at listed price</option>
+              <option value="quote">Quote — team finalises the price</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2 pt-7">
+            <input
+              id="pf-indicative"
+              name="priceIsIndicative"
+              type="checkbox"
+              defaultChecked={p?.priceIsIndicative ?? false}
+              className="h-4 w-4 accent-[var(--color-ink)]"
+            />
+            <Label htmlFor="pf-indicative">Price is indicative (starting from…)</Label>
+          </div>
+          <div>
+            <Label htmlFor="pf-hsn">HSN code</Label>
+            <Input id="pf-hsn" name="hsnCode" defaultValue={p?.hsnCode ?? ""} placeholder="e.g. 9403" />
+          </div>
+          <div>
+            <Label htmlFor="pf-gst">GST rate (%)</Label>
+            <Input
+              id="pf-gst"
+              name="gstRate"
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              defaultValue={p?.gstRate ?? ""}
+              placeholder="e.g. 18"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-bg-soft)] p-6">
+        <h3 className="mb-5 font-serif text-[20px] text-[var(--color-ink)]">SEO</h3>
+        <div className="grid gap-4">
+          <div>
+            <Label htmlFor="pf-meta-title">Meta title (overrides the auto title, ~60 chars)</Label>
+            <Input id="pf-meta-title" name="metaTitle" maxLength={120} defaultValue={p?.metaTitle ?? ""} />
+          </div>
+          <div>
+            <Label htmlFor="pf-meta-desc">Meta description (~160 chars)</Label>
+            <Textarea id="pf-meta-desc" name="metaDescription" maxLength={300} rows={2} defaultValue={p?.metaDescription ?? ""} />
+          </div>
         </div>
       </section>
 

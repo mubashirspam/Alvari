@@ -60,6 +60,12 @@ export type Product = {
   priceWas: number;
   discountPercent: number;
   badge: ProductBadge | null;
+  purchaseMode: "instant" | "quote";
+  priceIsIndicative: boolean;
+  hsnCode: string | null;
+  gstRate: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
   illustrationKey: string;
   imageUrl: string | null;
   gradientFrom: string;
@@ -171,6 +177,12 @@ export function mapProductAggregate(agg: ProductAggregate): Product {
     priceWas,
     discountPercent: percentOff(priceNow, priceWas),
     badge: row.badge,
+    purchaseMode: row.purchaseMode,
+    priceIsIndicative: row.priceIsIndicative,
+    hsnCode: row.hsnCode,
+    gstRate: row.gstRate,
+    metaTitle: row.metaTitle,
+    metaDescription: row.metaDescription,
     illustrationKey: row.illustrationKey,
     imageUrl: row.imageUrl,
     gradientFrom: row.gradientFrom,

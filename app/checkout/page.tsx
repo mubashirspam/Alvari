@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Loader2 } from "lucide-react";
 import { useCart, cartSubtotal } from "@/features/cart/store";
+import { openRazorpayCheckout } from "@/features/payments/razorpay-checkout";
 import { formatINR } from "@/lib/utils";
 import {
   CustomOrderSection,
@@ -128,6 +129,7 @@ export default function CheckoutPage() {
   const [promoError, setPromoError] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [referralCode, setReferralCode] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"whatsapp" | "online">("whatsapp");
 
   const set = (k: keyof FormData) => (v: string) =>
     setForm((p) => ({ ...p, [k]: v }));
@@ -214,10 +216,93 @@ export default function CheckoutPage() {
     return Object.keys(errs).length === 0;
   }
 
+  function orderPayload() {
+    return {
+      ...form,
+      customerPhone: form.customerPhone.replace(/\D/g, ""),
+      customerEmail: form.customerEmail || null,
+      referralCode: referralCode || null,
+      promoCode: promoApplied?.code ?? null,
+      discountInPaise: Math.round(discount * 100),
+      items: items.map((it) => ({
+        productId: it.productId,
+        variantId: it.variantId,
+        productSlug: it.slug,
+        productName: it.name,
+        variantSku: it.variantSku,
+        variantName: it.variantName,
+        unitPrice: it.unitPrice,
+        quantity: it.quantity,
+        imageUrl: it.imageUrl,
+      })),
+    };
+  }
+
+  async function payOnline() {
+    try {
+      const res = await fetch("/api/orders/instant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload()),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrors({
+          root:
+            data.error ??
+            "Online payment is unavailable right now — try ordering via WhatsApp.",
+        });
+        setSubmitting(false);
+        return;
+      }
+      await openRazorpayCheckout({
+        keyId: data.keyId,
+        razorpayOrderId: data.razorpayOrderId,
+        amountInPaise: data.amountInPaise,
+        prefill: data.prefill,
+        onSuccess: async (resp) => {
+          const verifyRes = await fetch("/api/orders/instant/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpayOrderId: resp.razorpay_order_id,
+              razorpayPaymentId: resp.razorpay_payment_id,
+              signature: resp.razorpay_signature,
+            }),
+          });
+          if (verifyRes.ok) {
+            const { shortCode } = await verifyRes.json();
+            clear();
+            router.push(`/orders/${shortCode}`);
+          } else {
+            setErrors({
+              root: "Payment received but confirmation failed — our team will verify and contact you.",
+            });
+            setSubmitting(false);
+          }
+        },
+        onDismiss: () => {
+          setErrors({
+            root: "Payment was cancelled — no money was taken. You can try again or order via WhatsApp.",
+          });
+          setSubmitting(false);
+        },
+      });
+    } catch {
+      setErrors({ root: "Could not open the payment window. Please try again." });
+      setSubmitting(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
+
+    if (paymentMethod === "online") {
+      await payOnline();
+      return;
+    }
 
     try {
       const res = await fetch("/api/orders", {
@@ -593,6 +678,50 @@ export default function CheckoutPage() {
                   </p>
                 )}
 
+                {/* Payment method */}
+                <div className="mt-5 space-y-2">
+                  {(
+                    [
+                      {
+                        value: "whatsapp",
+                        title: "Order via WhatsApp",
+                        hint: "Our team confirms details and payment with you",
+                      },
+                      {
+                        value: "online",
+                        title: "Pay online now",
+                        hint: "UPI, cards, netbanking — secured by Razorpay",
+                      },
+                    ] as const
+                  ).map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition ${
+                        paymentMethod === opt.value
+                          ? "border-[var(--color-ink)] bg-[var(--color-bg-soft)]"
+                          : "border-[var(--color-line)] hover:border-[var(--color-muted)]"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value={opt.value}
+                        checked={paymentMethod === opt.value}
+                        onChange={() => setPaymentMethod(opt.value)}
+                        className="mt-0.5 accent-[var(--color-ink)]"
+                      />
+                      <span>
+                        <span className="block text-sm font-medium text-[var(--color-ink)]">
+                          {opt.title}
+                        </span>
+                        <span className="block text-xs text-[var(--color-muted)]">
+                          {opt.hint}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+
                 {errors.root && (
                   <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-600">
                     {errors.root}
@@ -607,15 +736,19 @@ export default function CheckoutPage() {
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Placing order…
+                      {paymentMethod === "online" ? "Opening payment…" : "Placing order…"}
                     </>
+                  ) : paymentMethod === "online" ? (
+                    `Pay ${formatINR(total)}`
                   ) : (
                     "Place Order"
                   )}
                 </button>
 
                 <p className="mt-3 text-center text-xs text-[var(--color-muted)]">
-                  Our team will contact you on WhatsApp to confirm details and payment.
+                  {paymentMethod === "online"
+                    ? "You'll get an order confirmation right after payment."
+                    : "Our team will contact you on WhatsApp to confirm details and payment."}
                 </p>
               </section>
             </div>

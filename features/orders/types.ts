@@ -13,8 +13,16 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   shipped: "Shipped",
   delivered: "Delivered",
   cancelled: "Cancelled",
+  pending_payment: "Awaiting payment",
+  paid: "Paid",
+  enquiry: "Quote enquiry",
+  quoted: "Quoted",
+  approved: "Quote approved",
+  rejected: "Quote rejected",
+  ready: "Ready",
 };
 
+/** Legacy linear pipeline shown as summary cards on the admin orders page. */
 export const ORDER_STATUS_FLOW: OrderStatus[] = [
   "pending",
   "confirmed",
@@ -69,6 +77,11 @@ export type Order = {
   subtotal: number;
   total: number;
   status: OrderStatus;
+  type: OrderRow["type"];
+  tax: number;
+  shipping: number;
+  quotedTotal: number | null;
+  adminNote: string | null;
   placedVia: string;
   referralCode: string | null;
   promoCode: string | null;
@@ -98,6 +111,12 @@ export function mapOrder(row: OrderRow, items: OrderItemRow[]): Order {
     subtotal: paiseToRupees(row.subtotalInPaise),
     total: paiseToRupees(row.totalInPaise),
     status: row.status,
+    type: row.type,
+    tax: paiseToRupees(row.taxInPaise),
+    shipping: paiseToRupees(row.shippingInPaise),
+    quotedTotal:
+      row.quotedTotalInPaise === null ? null : paiseToRupees(row.quotedTotalInPaise),
+    adminNote: row.adminNote,
     placedVia: row.placedVia,
     referralCode: row.referralCode,
     promoCode: row.promoCode,

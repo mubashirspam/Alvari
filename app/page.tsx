@@ -5,6 +5,7 @@ import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { EnquiryCtaSection } from "@/features/landing/enquiry-cta-section";
 import { FeaturedCollections } from "@/features/landing/featured-collections";
 import { HeroBanner } from "@/features/landing/hero-banner";
+import { MeasurementRequestForm } from "@/features/measurements/components/measurement-request-form";
 import { MidPageBanner } from "@/features/landing/mid-page-banner";
 import { ProcessSection } from "@/features/landing/process-section";
 import { ProductRow } from "@/features/landing/product-row";
@@ -51,6 +52,11 @@ export default async function HomePage() {
           products={bestSellers}
         />
         <ProcessSection />
+        <section className="bg-[var(--color-bg)] py-20">
+          <div className="mx-auto max-w-[720px] px-6 md:px-12">
+            <MeasurementRequestForm />
+          </div>
+        </section>
         <EnquiryCtaSection />
       </main>
       <SiteFooter />
