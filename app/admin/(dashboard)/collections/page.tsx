@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllCollections } from "@/features/collections/services/collection-service";
+import { CsvImportDialog } from "@/features/admin/components/csv-import-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +18,15 @@ export default async function AdminCollectionsPage() {
             {collections.length} collections — curated product groups shown on the homepage.
           </p>
         </div>
-        <Link
-          href="/admin/collections/new"
-          className="rounded-full bg-[var(--color-ink)] px-6 py-3 text-sm tracking-wide text-[var(--color-bg)] transition hover:bg-[var(--color-accent)]"
-        >
-          + New collection
-        </Link>
+        <div className="flex items-center gap-3">
+          <CsvImportDialog entity="collections" />
+          <Link
+            href="/admin/collections/new"
+            className="rounded-full bg-[var(--color-ink)] px-6 py-3 text-sm tracking-wide text-[var(--color-bg)] transition hover:bg-[var(--color-accent)]"
+          >
+            + New collection
+          </Link>
+        </div>
       </div>
 
       {collections.length === 0 ? (

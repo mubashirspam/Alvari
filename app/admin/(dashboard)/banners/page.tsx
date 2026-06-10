@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllBanners } from "@/features/banners/services/banner-service";
+import { CsvImportDialog } from "@/features/admin/components/csv-import-dialog";
 import { BANNER_SLOT_LABEL } from "@/features/banners/types";
 
 export const dynamic = "force-dynamic";
@@ -25,12 +26,15 @@ export default async function AdminBannersPage() {
             {banners.length} banners across all slots. Banners control the hero, promo strips, and mid-page promos on the homepage.
           </p>
         </div>
-        <Link
-          href="/admin/banners/new"
-          className="rounded-full bg-[var(--color-ink)] px-6 py-3 text-sm tracking-wide text-[var(--color-bg)] transition hover:bg-[var(--color-accent)]"
-        >
-          + New banner
-        </Link>
+        <div className="flex items-center gap-3">
+          <CsvImportDialog entity="banners" />
+          <Link
+            href="/admin/banners/new"
+            className="rounded-full bg-[var(--color-ink)] px-6 py-3 text-sm tracking-wide text-[var(--color-bg)] transition hover:bg-[var(--color-accent)]"
+          >
+            + New banner
+          </Link>
+        </div>
       </div>
 
       {banners.length === 0 ? (

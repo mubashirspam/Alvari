@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { adminFindAllProducts } from "@/features/admin/repositories/product-admin-repository";
+import { CsvImportDialog } from "@/features/admin/components/csv-import-dialog";
 import { CATEGORY_LABEL } from "@/features/products/types";
 import { formatINR } from "@/lib/utils";
 
@@ -19,12 +20,16 @@ export default async function AdminProductsPage() {
             {products.length} products — click to edit.
           </p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="rounded-full bg-[var(--color-ink)] px-6 py-3 text-sm tracking-wide text-[var(--color-bg)] transition hover:bg-[var(--color-accent)]"
-        >
-          + New product
-        </Link>
+        <div className="flex items-center gap-3">
+          <CsvImportDialog entity="variants" buttonLabel="Import variants" />
+          <CsvImportDialog entity="products" buttonLabel="Import products" />
+          <Link
+            href="/admin/products/new"
+            className="rounded-full bg-[var(--color-ink)] px-6 py-3 text-sm tracking-wide text-[var(--color-bg)] transition hover:bg-[var(--color-accent)]"
+          >
+            + New product
+          </Link>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-[var(--color-line)]">
