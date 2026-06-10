@@ -8,9 +8,16 @@ type ImageTransform = {
   focus?: "auto" | "face" | "center";
 };
 
+/** Fallback so a missing/empty env var never emits a broken relative path. */
+const DEFAULT_IMAGEKIT_ENDPOINT = "https://ik.imagekit.io/alvari";
+
 export function buildImageKitUrl(path: string, transform: ImageTransform = {}): string {
-  const endpoint = env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
-  if (!endpoint) return path;
+  const endpoint = env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT || DEFAULT_IMAGEKIT_ENDPOINT;
+  if (process.env.NODE_ENV !== "production" && !env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT) {
+    console.error(
+      "[imagekit] NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT is not set — falling back to default endpoint.",
+    );
+  }
 
   if (/^https?:\/\//i.test(path)) return path;
 
