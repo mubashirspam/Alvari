@@ -22,6 +22,12 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   ready: "Ready",
 };
 
+export const ORDER_TYPE_LABEL: Record<OrderRow["type"], string> = {
+  standard: "WhatsApp order",
+  instant: "Paid online",
+  quote: "Quote order",
+};
+
 /** Legacy linear pipeline shown as summary cards on the admin orders page. */
 export const ORDER_STATUS_FLOW: OrderStatus[] = [
   "pending",

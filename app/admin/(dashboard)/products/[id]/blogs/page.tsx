@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BreadcrumbLabel } from "@/features/admin/components/admin-breadcrumbs";
 import { BlogLinker } from "@/features/admin/components/blog-linker";
 import { adminFindAllPosts } from "@/features/admin/repositories/blog-admin-repository";
 import {
@@ -25,13 +25,8 @@ export default async function ProductBlogsPage({ params }: { params: Params }) {
 
   return (
     <div className="space-y-8">
+      <BreadcrumbLabel segment={id} label={agg.product.name} />
       <div>
-        <Link
-          href={`/admin/products/${id}`}
-          className="mb-4 inline-block text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-        >
-          ← Back to {agg.product.name}
-        </Link>
         <h1 className="font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
           Blog sections
         </h1>

@@ -6,7 +6,12 @@ import {
   findByShortCode,
   findItemsByOrderId,
 } from "@/features/orders/repositories/order-repository";
-import { mapOrder, ORDER_STATUS_LABEL, ORDER_STATUS_FLOW } from "@/features/orders/types";
+import {
+  mapOrder,
+  ORDER_STATUS_LABEL,
+  ORDER_STATUS_FLOW,
+  ORDER_TYPE_LABEL,
+} from "@/features/orders/types";
 import { formatINR } from "@/lib/utils";
 import { siteConfig } from "@/lib/env";
 
@@ -66,7 +71,15 @@ export default async function OrderPage({
             <CheckCircle2 className="mx-auto mb-3 h-14 w-14 text-green-500" strokeWidth={1.5} />
           )}
           <h1 className="font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
-            {order.status === "cancelled" ? "Order Cancelled" : "Order Placed!"}
+            {order.status === "cancelled"
+              ? "Order Cancelled"
+              : order.type === "instant"
+                ? order.status === "pending_payment"
+                  ? "Order Created"
+                  : "Payment Received!"
+                : order.type === "quote"
+                  ? "Quote Requested!"
+                  : "Order Placed!"}
           </h1>
           <p className="mt-2 text-sm text-[var(--color-muted)]">
             Order #{order.shortCode} ·{" "}
@@ -77,12 +90,17 @@ export default async function OrderPage({
             })}
           </p>
 
-          {/* Status badge */}
-          <span
-            className={`mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${STATUS_COLOR[order.status]}`}
-          >
-            {ORDER_STATUS_LABEL[order.status]}
-          </span>
+          {/* Status + mode badges */}
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${STATUS_COLOR[order.status] ?? "text-[var(--color-muted)] bg-[var(--color-bg-soft)] border-[var(--color-line)]"}`}
+            >
+              {ORDER_STATUS_LABEL[order.status]}
+            </span>
+            <span className="inline-flex items-center rounded-full border border-[var(--color-line)] bg-[var(--color-bg-soft)] px-3 py-1 text-xs font-medium text-[var(--color-muted)]">
+              {ORDER_TYPE_LABEL[order.type]}
+            </span>
+          </div>
         </div>
 
         {/* Progress tracker (not shown for cancelled) */}
@@ -161,11 +179,20 @@ export default async function OrderPage({
           </ul>
 
           <div className="mt-4 border-t border-[var(--color-line)] pt-4 flex justify-between">
-            <span className="text-sm text-[var(--color-muted)]">Total</span>
+            <span className="text-sm text-[var(--color-muted)]">
+              {order.type === "quote" && order.quotedTotal == null
+                ? "Estimated total"
+                : "Total"}
+            </span>
             <span className="font-serif text-xl font-semibold text-[var(--color-ink)]">
               {formatINR(order.total)}
             </span>
           </div>
+          {order.type === "quote" && order.quotedTotal == null && (
+            <p className="mt-1 text-right text-xs text-[var(--color-muted)]">
+              Final price confirmed by our team before payment.
+            </p>
+          )}
         </div>
 
         {/* Delivery info */}
@@ -176,30 +203,57 @@ export default async function OrderPage({
           <p className="mt-1 text-sm text-[var(--color-muted)]">{order.customerPhone}</p>
         </div>
 
-        {/* WhatsApp CTA */}
-        {order.status !== "cancelled" && (
-          <div className="mb-6 rounded-2xl border border-[#25D366]/30 bg-[#f0fdf4] p-6 text-center">
-            <MessageCircle className="mx-auto mb-3 h-8 w-8 text-[#25D366]" />
-            <h3 className="font-serif text-lg text-[var(--color-ink)]">
-              Next step — confirm on WhatsApp
-            </h3>
-            <p className="mt-2 text-sm text-[var(--color-muted)]">
-              Our team will contact you within 2–4 hours. You can also reach us directly:
-            </p>
-            <a
-              href={waLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            >
-              <MessageCircle className="h-4 w-4" />
-              Message on WhatsApp
-            </a>
-            <p className="mt-3 text-xs text-[var(--color-muted)]">
-              50% advance to confirm production · balance at delivery
-            </p>
-          </div>
-        )}
+        {/* Next steps — depends on how the order was placed */}
+        {order.status !== "cancelled" &&
+          (order.type === "instant" ? (
+            <div className="mb-6 rounded-2xl border border-[var(--color-line)] bg-[var(--color-bg-soft)] p-6 text-center">
+              <h3 className="font-serif text-lg text-[var(--color-ink)]">
+                {order.status === "pending_payment"
+                  ? "Payment pending"
+                  : "You're all set"}
+              </h3>
+              <p className="mt-2 text-sm text-[var(--color-muted)]">
+                {order.status === "pending_payment"
+                  ? "Your payment didn't complete. If money was deducted it will be auto-refunded; otherwise just place the order again."
+                  : "Your payment is confirmed — our team starts processing right away and will keep you updated. Questions? We're one message away:"}
+              </p>
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--color-line)] px-6 py-3 text-sm font-semibold text-[var(--color-ink)] transition-colors hover:border-[#25D366] hover:text-[#25D366]"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Chat with us
+              </a>
+            </div>
+          ) : (
+            <div className="mb-6 rounded-2xl border border-[#25D366]/30 bg-[#f0fdf4] p-6 text-center">
+              <MessageCircle className="mx-auto mb-3 h-8 w-8 text-[#25D366]" />
+              <h3 className="font-serif text-lg text-[var(--color-ink)]">
+                {order.type === "quote"
+                  ? "Next — we confirm your price"
+                  : "Next step — confirm on WhatsApp"}
+              </h3>
+              <p className="mt-2 text-sm text-[var(--color-muted)]">
+                {order.type === "quote"
+                  ? "Our team reviews your order and contacts you on WhatsApp with the final price. Once you approve, we send a secure payment link — nothing is charged until then."
+                  : "Our team will contact you within 2–4 hours. You can also reach us directly:"}
+              </p>
+              <a
+                href={waLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Message on WhatsApp
+              </a>
+              <p className="mt-3 text-xs text-[var(--color-muted)]">
+                50% advance to confirm production · balance at delivery
+              </p>
+            </div>
+          ))}
 
         {/* Notes */}
         {order.notes && (

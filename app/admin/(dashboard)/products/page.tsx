@@ -38,6 +38,7 @@ export default async function AdminProductsPage() {
             <tr>
               <th className="px-4 py-3 text-left font-medium">Product</th>
               <th className="px-4 py-3 text-left font-medium">Category</th>
+              <th className="px-4 py-3 text-left font-medium">Mode</th>
               <th className="px-4 py-3 text-left font-medium">Price</th>
               <th className="px-4 py-3 text-left font-medium">Status</th>
               <th className="px-4 py-3 text-left font-medium">Actions</th>
@@ -55,6 +56,18 @@ export default async function AdminProductsPage() {
                 </td>
                 <td className="px-4 py-3 text-[var(--color-ink)]">
                   {CATEGORY_LABEL[p.category]}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] ${
+                      p.purchaseMode === "quote"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-sky-100 text-sky-800"
+                    }`}
+                  >
+                    {p.purchaseMode === "quote" ? "Quote" : "Direct"}
+                    {p.priceIsIndicative ? " ~" : ""}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-[var(--color-ink)]">
                   {formatINR(p.priceNowInPaise / 100)}

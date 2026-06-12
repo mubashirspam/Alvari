@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BreadcrumbLabel } from "@/features/admin/components/admin-breadcrumbs";
 import { CollectionForm } from "@/features/admin/components/collection-form";
 import { CollectionProductsPicker } from "@/features/admin/components/collection-products-picker";
 import { getCollectionById } from "@/features/collections/services/collection-service";
@@ -32,13 +32,8 @@ export default async function EditCollectionPage({
 
   return (
     <div className="space-y-10">
+      <BreadcrumbLabel segment={id} label={collection.title} />
       <div>
-        <Link
-          href="/admin/collections"
-          className="mb-4 inline-block text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-        >
-          ← Back to collections
-        </Link>
         <h1 className="font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
           {collection.title}
         </h1>

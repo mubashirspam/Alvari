@@ -11,6 +11,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -393,6 +394,42 @@ export const categoryNodes = pgTable(
     index("category_nodes_visible_idx").on(table.isVisible, table.sortOrder),
   ],
 );
+
+/**
+ * Per-category variant attribute definitions (almirah → doors, lamp → color,
+ * bed → size + material). Defines which keys/values are valid for a category;
+ * variant rows keep storing chosen values in `productVariants.attributes` JSONB.
+ */
+export const variantAttributeInputEnum = pgEnum("variant_attribute_input", [
+  "select",
+  "color",
+  "text",
+]);
+
+export const categoryVariantAttributes = pgTable(
+  "category_variant_attributes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    category: productCategoryEnum("category").notNull(),
+    key: text("key").notNull(),
+    label: text("label").notNull(),
+    inputType: variantAttributeInputEnum("input_type")
+      .notNull()
+      .default("select"),
+    options: jsonb("options").$type<string[]>().notNull().default([]),
+    isRequired: boolean("is_required").notNull().default(true),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("cva_category_key_idx").on(table.category, table.key),
+  ],
+);
+
+export type CategoryVariantAttributeRow =
+  typeof categoryVariantAttributes.$inferSelect;
 
 export const banners = pgTable(
   "banners",

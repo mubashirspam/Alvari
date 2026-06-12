@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { CollectionForm } from "@/features/admin/components/collection-form";
 
 export const dynamic = "force-dynamic";
@@ -8,12 +7,6 @@ export default function NewCollectionPage() {
   return (
     <div className="space-y-8">
       <div>
-        <Link
-          href="/admin/collections"
-          className="mb-4 inline-block text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-        >
-          ← Back to collections
-        </Link>
         <h1 className="font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
           New collection
         </h1>

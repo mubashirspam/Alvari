@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
       id: products.id,
       name: products.name,
       purchaseMode: products.purchaseMode,
+      priceIsIndicative: products.priceIsIndicative,
       gstRate: products.gstRate,
       priceNowInPaise: products.priceNowInPaise,
     })
@@ -82,7 +83,10 @@ export async function POST(req: NextRequest) {
     .where(inArray(products.id, productIds));
   const productById = new Map(productRows.map((p) => [p.id, p]));
 
-  // Quote-mode items cannot be paid online at the listed price.
+  // Mirror of partitionCheckout: online payment is for "Available" (instant)
+  // products only. Quote products go through the WhatsApp quote flow so the
+  // team can confirm the price — reject them here so a crafted request can't
+  // route a quote item around that confirmation.
   const quoteItems = data.items.filter(
     (i) => productById.get(i.productId)?.purchaseMode === "quote",
   );
@@ -90,8 +94,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Some items in your cart are quote-based (price finalised by our team) and can't be paid online. Place the order via WhatsApp instead.",
-        quoteItems: quoteItems.map((i) => i.productName),
+          "These items need a price quote from our team — request them via WhatsApp instead.",
+        blockedItems: [...new Set(quoteItems.map((i) => i.productName))],
       },
       { status: 422 },
     );

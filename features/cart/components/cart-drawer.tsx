@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { useCart, cartSubtotal, cartItemCount } from "../store";
+import { cartHasQuoteItems, cartIsMixed } from "../types";
 import { formatINR } from "@/lib/utils";
 import { buildImageKitUrl } from "@/lib/imagekit";
 
@@ -37,7 +38,7 @@ export function CartDrawer() {
         }`}
       />
       <aside
-        aria-label="Your quotation cart"
+        aria-label="Your shopping cart"
         aria-hidden={!isOpen}
         className={`fixed inset-y-0 right-0 z-[61] flex w-full max-w-[440px] flex-col bg-[var(--color-bg)] shadow-2xl transition-transform duration-400 ease-[cubic-bezier(0.76,0,0.24,1)] ${
           isOpen ? "translate-x-0" : "translate-x-full"
@@ -46,7 +47,7 @@ export function CartDrawer() {
         <header className="flex items-center justify-between border-b border-[var(--color-line)] px-6 py-5">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--color-accent)]">
-              Your quotation
+              Your cart
             </p>
             <h2 className="font-serif text-[22px] tracking-[-0.01em] text-[var(--color-ink)]">
               {count === 0 ? "Empty" : `${count} item${count > 1 ? "s" : ""}`}
@@ -67,7 +68,7 @@ export function CartDrawer() {
             <div className="flex h-full flex-col items-center justify-center text-center">
               <ShoppingBag className="mb-3 h-10 w-10 text-[var(--color-muted)]" />
               <p className="text-[15px] text-[var(--color-muted)]">
-                Your quotation is empty.
+                Your cart is empty.
               </p>
               <Link
                 href="/products"
@@ -109,8 +110,13 @@ export function CartDrawer() {
                         {it.variantName}
                       </p>
                     ) : null}
-                    <p className="mt-1.5 text-[13px] text-[var(--color-ink)]">
+                    <p className="mt-1.5 flex flex-wrap items-center gap-2 text-[13px] text-[var(--color-ink)]">
                       {formatINR(it.unitPrice)}
+                      {it.purchaseMode === "quote" && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-amber-800">
+                          {it.priceIsIndicative ? "Quote · price from" : "Quote item"}
+                        </span>
+                      )}
                     </p>
                     <div className="mt-3 flex items-center justify-between">
                       <div className="inline-flex items-center rounded-full border border-[var(--color-line)]">
@@ -161,14 +167,18 @@ export function CartDrawer() {
               </span>
             </div>
             <p className="mb-4 text-[12px] leading-relaxed text-[var(--color-muted)]">
-              Final price is confirmed with you on WhatsApp. Delivery & installation across Kerala are free.
+              {cartIsMixed(items)
+                ? "Pay online for your available items, and get a WhatsApp quote for the rest — both at checkout. Delivery & installation across Kerala are free."
+                : cartHasQuoteItems(items)
+                  ? "Our team confirms the final price on WhatsApp before anything is charged. Delivery & installation across Kerala are free."
+                  : "Pay securely online. Delivery & installation across Kerala are free."}
             </p>
             <Link
               href="/checkout"
               onClick={close}
               className="block w-full rounded-full bg-[var(--color-accent)] py-3.5 text-center text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--color-navy-deep)] transition-colors hover:bg-[var(--color-accent-warm)]"
             >
-              Request quote
+              Checkout
             </Link>
             <button
               type="button"

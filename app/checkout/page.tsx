@@ -4,9 +4,21 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Loader2 } from "lucide-react";
+import {
+  Minus,
+  Plus,
+  Trash2,
+  ShoppingBag,
+  ArrowLeft,
+  Loader2,
+  CreditCard,
+  MessageCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { useCart, cartSubtotal } from "@/features/cart/store";
+import type { CartItem } from "@/features/cart/types";
 import { openRazorpayCheckout } from "@/features/payments/razorpay-checkout";
+import { partitionCheckout } from "@/lib/commerce/checkout-options";
 import { formatINR } from "@/lib/utils";
 import {
   CustomOrderSection,
@@ -116,27 +128,102 @@ const CUSTOM_EMPTY: CustomOrderData = {
   referenceImages: [],
 };
 
+/** A single cart line with quantity controls — shared by both groups. */
+function LineItem({
+  item,
+  priceLabel,
+  onSetQty,
+  onRemove,
+}: {
+  item: CartItem;
+  priceLabel: React.ReactNode;
+  onSetQty: (qty: number) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <li className="flex gap-3 py-4">
+      {item.imageUrl && (
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+          <Image
+            src={item.imageUrl}
+            alt={item.name}
+            fill
+            className="object-cover"
+            sizes="64px"
+          />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-[var(--color-ink)]">
+          {item.name}
+        </p>
+        {item.variantName && (
+          <p className="text-xs text-[var(--color-muted)]">{item.variantName}</p>
+        )}
+        <div className="mt-2 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 rounded-full border border-[var(--color-line)] bg-[var(--color-bg)]">
+            <button
+              type="button"
+              onClick={() => onSetQty(item.quantity - 1)}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]"
+            >
+              <Minus className="h-3 w-3" />
+            </button>
+            <span className="w-5 text-center text-xs font-medium">{item.quantity}</span>
+            <button
+              type="button"
+              onClick={() => onSetQty(item.quantity + 1)}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]"
+            >
+              <Plus className="h-3 w-3" />
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-right text-sm font-semibold text-[var(--color-ink)]">
+              {priceLabel}
+            </span>
+            <button
+              type="button"
+              onClick={onRemove}
+              className="text-[var(--color-muted)] transition-colors hover:text-red-500"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, setQuantity, remove, clear, hasHydrated } = useCart();
+  const { items, setQuantity, remove, removeMany, clear, hasHydrated } = useCart();
   const [form, setForm] = useState<FormData>(INIT);
   const [customOrder, setCustomOrder] = useState<CustomOrderData>(CUSTOM_EMPTY);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState<"online" | "quote" | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [promoInput, setPromoInput] = useState("");
   const [promoApplied, setPromoApplied] = useState<{ code: string; discountRupees: number; label: string } | null>(null);
   const [promoError, setPromoError] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [referralCode, setReferralCode] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"whatsapp" | "online">("whatsapp");
+  // After one group of a mixed cart is placed, we keep the user here to finish
+  // the other group and show this confirmation for the order they just placed.
+  const [placed, setPlaced] = useState<{ kind: "online" | "quote"; shortCode: string } | null>(null);
 
   const set = (k: keyof FormData) => (v: string) =>
     setForm((p) => ({ ...p, [k]: v }));
 
-  const subtotal = cartSubtotal(items);
-  const discount = promoApplied?.discountRupees ?? 0;
-  const total = Math.max(0, subtotal - discount);
+  // Split the cart into its two checkout paths (mirrored server-side).
+  const { online: onlineItems, quote: quoteItems } = partitionCheckout(items);
+
+  const onlineSubtotal = cartSubtotal(onlineItems);
+  // Promo discount only applies to the online (money-moving) path; quote
+  // prices are finalised by the team, who apply any code manually.
+  const discount = Math.min(promoApplied?.discountRupees ?? 0, onlineSubtotal);
+  const onlineTotal = Math.max(0, onlineSubtotal - discount);
 
   // Read referral code from cookie on mount
   useEffect(() => {
@@ -150,7 +237,7 @@ export default function CheckoutPage() {
     setPromoError("");
     try {
       const res = await fetch(
-        `/api/promo/validate?code=${encodeURIComponent(promoInput.trim())}&total=${subtotal}`,
+        `/api/promo/validate?code=${encodeURIComponent(promoInput.trim())}&total=${onlineSubtotal}`,
       );
       const data = await res.json();
       if (!res.ok) {
@@ -216,15 +303,15 @@ export default function CheckoutPage() {
     return Object.keys(errs).length === 0;
   }
 
-  function orderPayload() {
+  function basePayload(group: CartItem[], discountRupees: number) {
     return {
       ...form,
       customerPhone: form.customerPhone.replace(/\D/g, ""),
       customerEmail: form.customerEmail || null,
       referralCode: referralCode || null,
       promoCode: promoApplied?.code ?? null,
-      discountInPaise: Math.round(discount * 100),
-      items: items.map((it) => ({
+      discountInPaise: Math.round(discountRupees * 100),
+      items: group.map((it) => ({
         productId: it.productId,
         variantId: it.variantId,
         productSlug: it.slug,
@@ -238,21 +325,42 @@ export default function CheckoutPage() {
     };
   }
 
+  /** Clear the just-placed group; redirect if the cart is now empty, else stay. */
+  function afterPlaced(kind: "online" | "quote", group: CartItem[], shortCode: string) {
+    const placedKeys = group.map((i) => i.key);
+    const cartEmptied = items.every((i) => placedKeys.includes(i.key));
+    removeMany(placedKeys);
+    if (promoApplied) {
+      // Avoid reusing the code on the other group of a mixed cart.
+      setPromoApplied(null);
+      setPromoInput("");
+    }
+    if (cartEmptied) {
+      clear();
+      router.push(`/orders/${shortCode}`);
+    } else {
+      setPlaced({ kind, shortCode });
+      setSubmitting(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
   async function payOnline() {
+    const group = onlineItems;
     try {
       const res = await fetch("/api/orders/instant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload()),
+        body: JSON.stringify(basePayload(group, discount)),
       });
       const data = await res.json();
       if (!res.ok) {
         setErrors({
           root:
             data.error ??
-            "Online payment is unavailable right now — try ordering via WhatsApp.",
+            "Online payment is unavailable right now — try again in a moment.",
         });
-        setSubmitting(false);
+        setSubmitting(null);
         return;
       }
       await openRazorpayCheckout({
@@ -272,83 +380,71 @@ export default function CheckoutPage() {
           });
           if (verifyRes.ok) {
             const { shortCode } = await verifyRes.json();
-            clear();
-            router.push(`/orders/${shortCode}`);
+            afterPlaced("online", group, shortCode);
           } else {
             setErrors({
               root: "Payment received but confirmation failed — our team will verify and contact you.",
             });
-            setSubmitting(false);
+            setSubmitting(null);
           }
         },
         onDismiss: () => {
           setErrors({
-            root: "Payment was cancelled — no money was taken. You can try again or order via WhatsApp.",
+            root: "Payment was cancelled — no money was taken. You can try again or request a quote.",
           });
-          setSubmitting(false);
+          setSubmitting(null);
         },
       });
     } catch {
       setErrors({ root: "Could not open the payment window. Please try again." });
-      setSubmitting(false);
+      setSubmitting(null);
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validate()) return;
-    setSubmitting(true);
-
-    if (paymentMethod === "online") {
-      await payOnline();
-      return;
-    }
-
+  async function requestQuote() {
+    const group = quoteItems;
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
-          customerPhone: form.customerPhone.replace(/\D/g, ""),
-          customerEmail: form.customerEmail || null,
-          referralCode: referralCode || null,
-          promoCode: promoApplied?.code ?? null,
-          discountInPaise: Math.round(discount * 100),
+          ...basePayload(group, 0),
           isCustomOrder: customOrder.isCustom,
           customDimensions: customOrder.dimensions || null,
           customWoodType: customOrder.woodType || null,
           customFinish: customOrder.finish || null,
           customTimeline: customOrder.timeline || null,
           customReferenceImages: customOrder.referenceImages,
-          items: items.map((it) => ({
-            productId: it.productId,
-            variantId: it.variantId,
-            productSlug: it.slug,
-            productName: it.name,
-            variantSku: it.variantSku,
-            variantName: it.variantName,
-            unitPrice: it.unitPrice,
-            quantity: it.quantity,
-            imageUrl: it.imageUrl,
-          })),
         }),
       });
-
       if (!res.ok) {
         const data = await res.json();
         setErrors({ root: data.error ?? "Something went wrong. Please try again." });
-        setSubmitting(false);
+        setSubmitting(null);
         return;
       }
-
       const { shortCode } = await res.json();
-      clear();
-      router.push(`/orders/${shortCode}`);
+      afterPlaced("quote", group, shortCode);
     } catch {
       setErrors({ root: "Network error. Please try again." });
-      setSubmitting(false);
+      setSubmitting(null);
     }
+  }
+
+  async function handlePayOnline() {
+    if (onlineItems.length === 0 || submitting) return;
+    setErrors({});
+    if (!validate()) return;
+    setSubmitting("online");
+    await payOnline();
+  }
+
+  async function handleRequestQuote() {
+    if (quoteItems.length === 0 || submitting) return;
+    setErrors({});
+    if (!validate()) return;
+    setSubmitting("quote");
+    await requestQuote();
   }
 
   if (!hasHydrated) {
@@ -362,22 +458,46 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-6 px-4 py-16 text-center">
-        <ShoppingBag className="h-12 w-12 text-[var(--color-muted)]" strokeWidth={1} />
-        <div>
-          <h1 className="font-serif text-2xl text-[var(--color-ink)]">Your cart is empty</h1>
-          <p className="mt-2 text-sm text-[var(--color-muted)]">
-            Add some products before checking out.
-          </p>
-        </div>
-        <Link
-          href="/products"
-          className="rounded-full bg-[var(--color-ink)] px-6 py-3 text-sm font-medium text-[var(--color-bg)] transition-colors hover:bg-[var(--color-accent)]"
-        >
-          Browse Products
-        </Link>
+        {placed ? (
+          <>
+            <CheckCircle2 className="h-12 w-12 text-green-600" strokeWidth={1.5} />
+            <div>
+              <h1 className="font-serif text-2xl text-[var(--color-ink)]">
+                {placed.kind === "online" ? "Payment confirmed" : "Quote request sent"}
+              </h1>
+              <p className="mt-2 text-sm text-[var(--color-muted)]">
+                Order <span className="font-mono font-medium">{placed.shortCode}</span> is on its way.
+              </p>
+            </div>
+            <Link
+              href={`/orders/${placed.shortCode}`}
+              className="rounded-full bg-[var(--color-ink)] px-6 py-3 text-sm font-medium text-[var(--color-bg)] transition-colors hover:bg-[var(--color-accent)]"
+            >
+              View your order
+            </Link>
+          </>
+        ) : (
+          <>
+            <ShoppingBag className="h-12 w-12 text-[var(--color-muted)]" strokeWidth={1} />
+            <div>
+              <h1 className="font-serif text-2xl text-[var(--color-ink)]">Your cart is empty</h1>
+              <p className="mt-2 text-sm text-[var(--color-muted)]">
+                Add some products before checking out.
+              </p>
+            </div>
+            <Link
+              href="/products"
+              className="rounded-full bg-[var(--color-ink)] px-6 py-3 text-sm font-medium text-[var(--color-bg)] transition-colors hover:bg-[var(--color-accent)]"
+            >
+              Browse Products
+            </Link>
+          </>
+        )}
       </div>
     );
   }
+
+  const isMixed = onlineItems.length > 0 && quoteItems.length > 0;
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] py-8">
@@ -391,11 +511,37 @@ export default function CheckoutPage() {
           Continue shopping
         </Link>
 
-        <h1 className="mb-8 font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
+        <h1 className="mb-2 font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
           Checkout
         </h1>
+        {isMixed && (
+          <p className="mb-6 max-w-2xl text-sm text-[var(--color-muted)]">
+            Your cart has two kinds of items. Pay online for the available ones now,
+            and request a WhatsApp quote for the made-to-order ones — handle each in
+            its own section on the right. You can do both.
+          </p>
+        )}
 
-        <form ref={formRef} onSubmit={handleSubmit} noValidate autoComplete="on">
+        {/* Confirmation for a group already placed (mixed cart, one half done) */}
+        {placed && (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
+            <div>
+              <p className="font-medium">
+                {placed.kind === "online" ? "Payment confirmed" : "Quote request sent"} — order{" "}
+                <Link href={`/orders/${placed.shortCode}`} className="font-mono underline">
+                  {placed.shortCode}
+                </Link>
+                .
+              </p>
+              <p className="mt-0.5 text-green-700">
+                Now finish the remaining items below.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <form ref={formRef} onSubmit={(e) => e.preventDefault()} noValidate autoComplete="on">
           <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
             {/* ── Left: Delivery details ── */}
             <div className="space-y-8">
@@ -539,218 +685,202 @@ export default function CheckoutPage() {
                 />
               </section>
 
-              {/* Custom order */}
-              <CustomOrderSection value={customOrder} onChange={setCustomOrder} />
+              {/* Custom order — applies to the WhatsApp quote */}
+              {quoteItems.length > 0 && (
+                <CustomOrderSection value={customOrder} onChange={setCustomOrder} />
+              )}
             </div>
 
-            {/* ── Right: Order summary ── */}
+            {/* ── Right: Order summary, split by checkout path ── */}
             <div className="space-y-4">
-              <section className="sticky top-6 rounded-2xl border border-[var(--color-line)] bg-[var(--color-bg-soft)] p-6">
-                <h2 className="mb-5 font-serif text-xl text-[var(--color-ink)]">
-                  Your order
-                </h2>
-
+              <div className="sticky top-6 space-y-4">
                 {errors.items && (
-                  <p className="mb-3 text-sm text-red-500">{errors.items}</p>
+                  <p className="rounded-xl bg-red-50 p-3 text-sm text-red-500">{errors.items}</p>
                 )}
 
-                <ul className="divide-y divide-[var(--color-line)]">
-                  {items.map((item) => (
-                    <li key={item.key} className="flex gap-3 py-4">
-                      {item.imageUrl && (
-                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-                          <Image
-                            src={item.imageUrl}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                            sizes="64px"
+                {/* ── Pay online now (available items) ── */}
+                {onlineItems.length > 0 && (
+                  <section className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-bg-soft)] p-6">
+                    <div className="mb-1 flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-[var(--color-accent)]" />
+                      <h2 className="font-serif text-xl text-[var(--color-ink)]">
+                        Pay online now
+                      </h2>
+                    </div>
+                    <p className="mb-3 text-xs text-[var(--color-muted)]">
+                      In stock — UPI, cards & netbanking, secured by Razorpay.
+                    </p>
+
+                    <ul className="divide-y divide-[var(--color-line)] border-t border-[var(--color-line)]">
+                      {onlineItems.map((item) => (
+                        <LineItem
+                          key={item.key}
+                          item={item}
+                          priceLabel={formatINR(item.unitPrice * item.quantity)}
+                          onSetQty={(q) => setQuantity(item.key, q)}
+                          onRemove={() => remove(item.key)}
+                        />
+                      ))}
+                    </ul>
+
+                    {/* Promo code */}
+                    <div className="mt-4 border-t border-[var(--color-line)] pt-4">
+                      {promoApplied ? (
+                        <div className="flex items-center justify-between rounded-xl bg-green-50 px-3 py-2 text-sm">
+                          <div>
+                            <span className="font-mono font-semibold text-green-700">{promoApplied.code}</span>
+                            <span className="ml-2 text-green-600">{promoApplied.label}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setPromoApplied(null); setPromoInput(""); }}
+                            className="text-green-500 hover:text-red-500 transition-colors text-xs"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={promoInput}
+                            onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), applyPromo())}
+                            placeholder="Promo code"
+                            className="flex-1 rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]"
                           />
+                          <button
+                            type="button"
+                            onClick={applyPromo}
+                            disabled={promoLoading || !promoInput.trim()}
+                            className="rounded-xl border border-[var(--color-line)] px-3 py-2 text-xs font-medium text-[var(--color-ink)] transition-colors hover:border-[var(--color-accent)] disabled:opacity-50"
+                          >
+                            {promoLoading ? "…" : "Apply"}
+                          </button>
                         </div>
                       )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-[var(--color-ink)]">
-                          {item.name}
-                        </p>
-                        {item.variantName && (
-                          <p className="text-xs text-[var(--color-muted)]">{item.variantName}</p>
-                        )}
-                        <div className="mt-2 flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 rounded-full border border-[var(--color-line)] bg-[var(--color-bg)]">
-                            <button
-                              type="button"
-                              onClick={() => setQuantity(item.key, item.quantity - 1)}
-                              className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]"
-                            >
-                              <Minus className="h-3 w-3" />
-                            </button>
-                            <span className="w-5 text-center text-xs font-medium">
-                              {item.quantity}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setQuantity(item.key, item.quantity + 1)}
-                              className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-semibold text-[var(--color-ink)]">
-                              {formatINR(item.unitPrice * item.quantity)}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => remove(item.key)}
-                              className="text-[var(--color-muted)] transition-colors hover:text-red-500"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
+                      {promoError && <p className="mt-1 text-xs text-red-500">{promoError}</p>}
+                    </div>
+
+                    {/* Totals */}
+                    <div className="mt-3 space-y-1.5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-[var(--color-muted)]">Subtotal</span>
+                        <span className="text-[var(--color-ink)]">{formatINR(onlineSubtotal)}</span>
+                      </div>
+                      {discount > 0 && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-green-600">Discount</span>
+                          <span className="font-semibold text-green-600">−{formatINR(discount)}</span>
                         </div>
+                      )}
+                      <div className="flex items-center justify-between border-t border-[var(--color-line)] pt-1.5 text-sm">
+                        <span className="font-semibold text-[var(--color-ink)]">Total</span>
+                        <span className="font-serif text-lg font-semibold text-[var(--color-ink)]">{formatINR(onlineTotal)}</span>
                       </div>
-                    </li>
-                  ))}
-                </ul>
+                      <p className="text-xs text-[var(--color-muted)]">
+                        Delivery charges confirmed by our team.
+                      </p>
+                    </div>
+                    {referralCode && (
+                      <p className="mt-2 text-xs text-[var(--color-muted)]">
+                        Referral: <span className="font-mono font-medium">{referralCode}</span>
+                      </p>
+                    )}
 
-                {/* Promo code */}
-                <div className="mt-4 border-t border-[var(--color-line)] pt-4">
-                  {promoApplied ? (
-                    <div className="flex items-center justify-between rounded-xl bg-green-50 px-3 py-2 text-sm">
-                      <div>
-                        <span className="font-mono font-semibold text-green-700">{promoApplied.code}</span>
-                        <span className="ml-2 text-green-600">{promoApplied.label}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => { setPromoApplied(null); setPromoInput(""); }}
-                        className="text-green-500 hover:text-red-500 transition-colors text-xs"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={promoInput}
-                        onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
-                        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), applyPromo())}
-                        placeholder="Promo code"
-                        className="flex-1 rounded-xl border border-[var(--color-line)] bg-[var(--color-bg)] px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]"
-                      />
-                      <button
-                        type="button"
-                        onClick={applyPromo}
-                        disabled={promoLoading || !promoInput.trim()}
-                        className="rounded-xl border border-[var(--color-line)] px-3 py-2 text-xs font-medium text-[var(--color-ink)] transition-colors hover:border-[var(--color-accent)] disabled:opacity-50"
-                      >
-                        {promoLoading ? "…" : "Apply"}
-                      </button>
-                    </div>
-                  )}
-                  {promoError && <p className="mt-1 text-xs text-red-500">{promoError}</p>}
-                </div>
-
-                {/* Totals */}
-                <div className="mt-3 space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-[var(--color-muted)]">Subtotal</span>
-                    <span className="text-[var(--color-ink)]">{formatINR(subtotal)}</span>
-                  </div>
-                  {discount > 0 && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-green-600">Discount</span>
-                      <span className="font-semibold text-green-600">−{formatINR(discount)}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between border-t border-[var(--color-line)] pt-1.5 text-sm">
-                    <span className="font-semibold text-[var(--color-ink)]">Total</span>
-                    <span className="font-serif text-lg font-semibold text-[var(--color-ink)]">{formatINR(total)}</span>
-                  </div>
-                  <p className="text-xs text-[var(--color-muted)]">
-                    Delivery charges confirmed by our team.
-                  </p>
-                </div>
-                {referralCode && (
-                  <p className="mt-2 text-xs text-[var(--color-muted)]">
-                    Referral: <span className="font-mono font-medium">{referralCode}</span>
-                  </p>
+                    <button
+                      type="button"
+                      onClick={handlePayOnline}
+                      disabled={submitting !== null}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-[var(--color-ink)] px-6 py-4 text-sm font-medium text-[var(--color-bg)] transition-colors hover:bg-[var(--color-accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {submitting === "online" ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Opening payment…
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="h-4 w-4" />
+                          Pay {formatINR(onlineTotal)}
+                        </>
+                      )}
+                    </button>
+                    <p className="mt-3 text-center text-xs text-[var(--color-muted)]">
+                      You&apos;ll get an order confirmation right after payment.
+                    </p>
+                  </section>
                 )}
 
-                {/* Payment method */}
-                <div className="mt-5 space-y-2">
-                  {(
-                    [
-                      {
-                        value: "whatsapp",
-                        title: "Order via WhatsApp",
-                        hint: "Our team confirms details and payment with you",
-                      },
-                      {
-                        value: "online",
-                        title: "Pay online now",
-                        hint: "UPI, cards, netbanking — secured by Razorpay",
-                      },
-                    ] as const
-                  ).map((opt) => (
-                    <label
-                      key={opt.value}
-                      className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition ${
-                        paymentMethod === opt.value
-                          ? "border-[var(--color-ink)] bg-[var(--color-bg-soft)]"
-                          : "border-[var(--color-line)] hover:border-[var(--color-muted)]"
-                      }`}
+                {/* ── Get a quote (made-to-order items, via WhatsApp) ── */}
+                {quoteItems.length > 0 && (
+                  <section className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-bg-soft)] p-6">
+                    <div className="mb-1 flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4 text-[var(--color-accent)]" />
+                      <h2 className="font-serif text-xl text-[var(--color-ink)]">
+                        Get a quote
+                      </h2>
+                    </div>
+                    <p className="mb-3 text-xs text-[var(--color-muted)]">
+                      Made-to-order — our team confirms the final price on WhatsApp,
+                      then sends a secure payment link. Nothing is charged until you approve.
+                    </p>
+
+                    <ul className="divide-y divide-[var(--color-line)] border-t border-[var(--color-line)]">
+                      {quoteItems.map((item) => (
+                        <LineItem
+                          key={item.key}
+                          item={item}
+                          priceLabel={
+                            item.priceIsIndicative ? (
+                              <span className="text-xs font-medium text-[var(--color-muted)]">
+                                Price on confirmation
+                              </span>
+                            ) : (
+                              <span className="flex flex-col items-end leading-tight">
+                                <span>{formatINR(item.unitPrice * item.quantity)}</span>
+                                <span className="text-[10px] font-normal uppercase tracking-wide text-[var(--color-muted)]">
+                                  starting
+                                </span>
+                              </span>
+                            )
+                          }
+                          onSetQty={(q) => setQuantity(item.key, q)}
+                          onRemove={() => remove(item.key)}
+                        />
+                      ))}
+                    </ul>
+
+                    <button
+                      type="button"
+                      onClick={handleRequestQuote}
+                      disabled={submitting !== null}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-[var(--color-ink)] bg-transparent px-6 py-4 text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-ink)] hover:text-[var(--color-bg)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value={opt.value}
-                        checked={paymentMethod === opt.value}
-                        onChange={() => setPaymentMethod(opt.value)}
-                        className="mt-0.5 accent-[var(--color-ink)]"
-                      />
-                      <span>
-                        <span className="block text-sm font-medium text-[var(--color-ink)]">
-                          {opt.title}
-                        </span>
-                        <span className="block text-xs text-[var(--color-muted)]">
-                          {opt.hint}
-                        </span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
+                      {submitting === "quote" ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Sending request…
+                        </>
+                      ) : (
+                        <>
+                          <MessageCircle className="h-4 w-4" />
+                          Request quote via WhatsApp
+                        </>
+                      )}
+                    </button>
+                    <p className="mt-3 text-center text-xs text-[var(--color-muted)]">
+                      Our team contacts you on WhatsApp to confirm the final price.
+                    </p>
+                  </section>
+                )}
 
                 {errors.root && (
-                  <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-600">
+                  <div className="rounded-xl bg-red-50 p-3 text-sm text-red-600">
                     {errors.root}
                   </div>
                 )}
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-[var(--color-ink)] px-6 py-4 text-sm font-medium text-[var(--color-bg)] transition-colors hover:bg-[var(--color-accent)] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {paymentMethod === "online" ? "Opening payment…" : "Placing order…"}
-                    </>
-                  ) : paymentMethod === "online" ? (
-                    `Pay ${formatINR(total)}`
-                  ) : (
-                    "Place Order"
-                  )}
-                </button>
-
-                <p className="mt-3 text-center text-xs text-[var(--color-muted)]">
-                  {paymentMethod === "online"
-                    ? "You'll get an order confirmation right after payment."
-                    : "Our team will contact you on WhatsApp to confirm details and payment."}
-                </p>
-              </section>
+              </div>
             </div>
           </div>
         </form>

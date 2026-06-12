@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BreadcrumbLabel } from "@/features/admin/components/admin-breadcrumbs";
 import { ProductForm } from "@/features/admin/components/product-form";
 import { adminFindProductById } from "@/features/admin/repositories/product-admin-repository";
 
@@ -20,13 +21,8 @@ export default async function EditProductPage({ params }: { params: Params }) {
 
   return (
     <div className="space-y-8">
+      <BreadcrumbLabel segment={id} label={agg.product.name} />
       <div>
-        <Link
-          href="/admin/products"
-          className="mb-4 inline-block text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-        >
-          ← Back to products
-        </Link>
         <h1 className="font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
           {agg.product.name}
         </h1>

@@ -50,6 +50,13 @@
       "when": 1781115816943,
       "tag": "0006_ancient_piledriver",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781202094137,
+      "tag": "0007_red_black_cat",
+      "breakpoints": true
     }
   ]
 }

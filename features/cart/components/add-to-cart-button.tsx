@@ -10,7 +10,10 @@ type Variant = Pick<
 >;
 
 type Props = {
-  product: Pick<Product, "id" | "slug" | "name" | "priceNow" | "imageUrl">;
+  product: Pick<
+    Product,
+    "id" | "slug" | "name" | "priceNow" | "imageUrl" | "purchaseMode" | "priceIsIndicative"
+  >;
   variant?: Variant | null;
   imageUrl?: string | null;
   shape?: "icon" | "full";
@@ -41,6 +44,8 @@ export function AddToCartButton({
       variantName: variant?.name ?? null,
       unitPrice,
       imageUrl: imageUrl ?? product.imageUrl ?? null,
+      purchaseMode: product.purchaseMode,
+      priceIsIndicative: product.priceIsIndicative,
     });
   }
 
@@ -64,7 +69,7 @@ export function AddToCartButton({
       className={`inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-accent)] px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--color-navy-deep)] transition-colors hover:bg-[var(--color-accent-warm)] ${className}`}
     >
       <ShoppingBag className="h-4 w-4" />
-      {label ?? "Add to quotation"}
+      {label ?? "Add to cart"}
     </button>
   );
 }

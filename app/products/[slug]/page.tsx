@@ -17,6 +17,8 @@ import {
 import { getProductBySlug } from "@/features/products/services/product-service";
 import { ReviewsSection } from "@/features/reviews/components/reviews-section";
 import { getProductReviews } from "@/features/reviews/services/review-service";
+import { findAttributeDefsByCategory } from "@/features/variant-attributes/repositories/variant-attribute-repository";
+import { mapAttributeDefRow } from "@/features/variant-attributes/types";
 import { CATEGORY_LABEL } from "@/features/products/types";
 import { breadcrumbJsonLd, productJsonLd, faqJsonLd } from "@/lib/seo/jsonld";
 
@@ -87,6 +89,10 @@ export default async function ProductDetailPage({
 
   if (!product) notFound();
 
+  const attributeDefs = (
+    await findAttributeDefsByCategory(product.category)
+  ).map(mapAttributeDefRow);
+
   const { summary: reviewSummary } = await getProductReviews(product.id);
 
   const inStock = product.variants.some((v) => v.stock > 0) || product.variants.length === 0;
@@ -147,7 +153,7 @@ export default async function ProductDetailPage({
             <ArrowLeft className="h-4 w-4" /> Back to collection
           </Link>
 
-          <ProductGallery product={product} />
+          <ProductGallery product={product} attributeDefs={attributeDefs} />
           <ProductLongDescription product={product} />
           <ProductSpecs product={product} />
           <ProductBlogSections sections={product.blogSections} />

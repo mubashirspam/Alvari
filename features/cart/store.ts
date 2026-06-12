@@ -12,6 +12,7 @@ type CartState = {
   hasHydrated: boolean;
   add: (item: AddOptions) => void;
   remove: (key: string) => void;
+  removeMany: (keys: string[]) => void;
   setQuantity: (key: string, quantity: number) => void;
   clear: () => void;
   open: () => void;
@@ -46,6 +47,10 @@ export const useCart = create<CartState>()(
         }),
       remove: (key) =>
         set((state) => ({ items: state.items.filter((i) => i.key !== key) })),
+      removeMany: (keys) =>
+        set((state) => ({
+          items: state.items.filter((i) => !keys.includes(i.key)),
+        })),
       setQuantity: (key, quantity) =>
         set((state) => {
           if (quantity <= 0) {
@@ -65,6 +70,18 @@ export const useCart = create<CartState>()(
     }),
     {
       name: "alvari-cart-v1",
+      // v1 → v2: items gained purchaseMode/priceIsIndicative. Legacy items
+      // don't carry them and we can't know a product's mode client-side, so
+      // they are dropped (acceptable pre-launch; checkout re-validates anyway).
+      version: 2,
+      migrate: (persisted) => {
+        const state = persisted as { items?: Partial<CartItem>[] };
+        return {
+          items: (state.items ?? []).filter(
+            (i): i is CartItem => typeof i.purchaseMode === "string",
+          ),
+        };
+      },
       partialize: (state) => ({ items: state.items }),
       onRehydrateStorage: () => (state) => {
         state?._setHasHydrated(true);

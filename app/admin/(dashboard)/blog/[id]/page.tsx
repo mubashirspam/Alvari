@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BreadcrumbLabel } from "@/features/admin/components/admin-breadcrumbs";
 import { BlogForm } from "@/features/admin/components/blog-form";
 import { adminFindPostById } from "@/features/admin/repositories/blog-admin-repository";
 import { DeleteBlogButton } from "@/features/admin/components/delete-blog-button";
@@ -21,14 +21,9 @@ export default async function EditBlogPostPage({ params }: { params: Params }) {
 
   return (
     <div className="space-y-8">
+      <BreadcrumbLabel segment={id} label={post.title} />
       <div className="flex items-start justify-between">
         <div>
-          <Link
-            href="/admin/blog"
-            className="mb-4 inline-block text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-          >
-            ← Back to blog
-          </Link>
           <h1 className="font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
             {post.title}
           </h1>

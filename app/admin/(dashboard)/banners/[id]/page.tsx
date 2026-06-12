@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BreadcrumbLabel } from "@/features/admin/components/admin-breadcrumbs";
 import { BannerForm } from "@/features/admin/components/banner-form";
 import { getBannerById } from "@/features/banners/services/banner-service";
 
@@ -15,13 +15,8 @@ export default async function EditBannerPage({ params }: { params: Params }) {
 
   return (
     <div className="space-y-8">
+      <BreadcrumbLabel segment={id} label={banner.slug} />
       <div>
-        <Link
-          href="/admin/banners"
-          className="mb-4 inline-block text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-        >
-          ← Back to banners
-        </Link>
         <h1 className="font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
           Edit banner
         </h1>

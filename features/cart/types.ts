@@ -11,7 +11,22 @@ export type CartItem = {
   unitPrice: number;
   quantity: number;
   imageUrl: string | null;
+  /** instant = pay online at listed price; quote = team confirms final price. */
+  purchaseMode: "instant" | "quote";
+  /** Listed price is a starting point — blocks online payment (checkout rules). */
+  priceIsIndicative: boolean;
 };
+
+export function cartHasQuoteItems(items: CartItem[]): boolean {
+  return items.some((i) => i.purchaseMode === "quote");
+}
+
+export function cartIsMixed(items: CartItem[]): boolean {
+  return (
+    items.some((i) => i.purchaseMode === "quote") &&
+    items.some((i) => i.purchaseMode === "instant")
+  );
+}
 
 export function makeCartKey(productId: string, variantId: string | null): string {
   return `${productId}::${variantId ?? "default"}`;

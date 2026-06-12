@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { Share2, Copy, Check } from "lucide-react";
+import { Share2, Check } from "lucide-react";
 import { ProductIllustration } from "@/features/products/components/product-illustration";
 import type { Product, ProductImage, ProductVariant } from "@/features/products/types";
 import { BADGE_LABEL, HOT_BADGES } from "@/features/products/types";
 import { AddToCartButton } from "@/features/cart/components/add-to-cart-button";
+import type { VariantAttributeDef } from "@/features/variant-attributes/types";
 import { siteConfig } from "@/lib/env";
 import { buildImageKitUrl } from "@/lib/imagekit";
 import { formatINR } from "@/lib/utils";
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   product: Product;
+  attributeDefs?: VariantAttributeDef[];
 };
 
 function imagesForVariant(
@@ -39,7 +41,128 @@ function formatAttrValue(value: string | number | boolean): string {
   return String(value);
 }
 
-export function ProductGallery({ product }: Props) {
+/**
+ * Attribute-based variant picker: one chip/swatch group per category-defined
+ * attribute (doors, size, colour…). An option is dimmed when no variant
+ * matches it together with the other currently selected attributes — clicking
+ * it still works and jumps to the closest matching variant.
+ */
+function AttributePickers({
+  defs,
+  variants,
+  selectedVariant,
+  onSelect,
+}: {
+  defs: VariantAttributeDef[];
+  variants: ProductVariant[];
+  selectedVariant: ProductVariant | null;
+  onSelect: (id: string) => void;
+}) {
+  const attrValue = (v: ProductVariant, key: string) =>
+    v.attributes[key] === undefined ? null : String(v.attributes[key]);
+
+  return (
+    <div className="mt-10 space-y-6">
+      {defs.map((def) => {
+        // Options from the definition first, then any extra values that
+        // exist on variants but were removed from the definition.
+        const valuesInVariants = [
+          ...new Set(
+            variants
+              .map((v) => attrValue(v, def.key))
+              .filter((v): v is string => v !== null),
+          ),
+        ];
+        const options = [
+          ...def.options.filter((o) => valuesInVariants.includes(o)),
+          ...valuesInVariants.filter((v) => !def.options.includes(v)),
+        ];
+        if (options.length === 0) return null;
+
+        const selectedValue = selectedVariant
+          ? attrValue(selectedVariant, def.key)
+          : null;
+
+        return (
+          <div key={def.key}>
+            <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--color-muted)]">
+              {def.label}
+              {selectedValue && (
+                <span className="ml-2 normal-case tracking-normal text-[var(--color-ink)]">
+                  {selectedValue}
+                </span>
+              )}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {options.map((option) => {
+                const selected = selectedValue === option;
+                // Compatible: a variant exists with this option AND the other
+                // currently selected attribute values.
+                const compatible = variants.some(
+                  (v) =>
+                    attrValue(v, def.key) === option &&
+                    defs.every(
+                      (d) =>
+                        d.key === def.key ||
+                        !selectedVariant ||
+                        attrValue(selectedVariant, d.key) === null ||
+                        attrValue(v, d.key) === attrValue(selectedVariant, d.key),
+                    ),
+                );
+
+                function handleClick() {
+                  // Prefer the variant matching current selection + this option,
+                  // else jump to the first variant carrying this option.
+                  const exact = variants.find(
+                    (v) =>
+                      attrValue(v, def.key) === option &&
+                      defs.every(
+                        (d) =>
+                          d.key === def.key ||
+                          !selectedVariant ||
+                          attrValue(selectedVariant, d.key) === null ||
+                          attrValue(v, d.key) === attrValue(selectedVariant, d.key),
+                      ),
+                  );
+                  const target =
+                    exact ?? variants.find((v) => attrValue(v, def.key) === option);
+                  if (target) onSelect(target.id);
+                }
+
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={handleClick}
+                    aria-pressed={selected}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] transition",
+                      selected
+                        ? "border-[var(--color-accent)] bg-[var(--color-accent)]/5 text-[var(--color-ink)]"
+                        : "border-[var(--color-line)] text-[var(--color-ink)] hover:border-[var(--color-ink)]",
+                      !compatible && !selected && "opacity-40",
+                    )}
+                  >
+                    {def.inputType === "color" && (
+                      <span
+                        aria-hidden
+                        className="h-3.5 w-3.5 rounded-full border border-[var(--color-line)]"
+                        style={{ background: option.toLowerCase() }}
+                      />
+                    )}
+                    {option}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function ProductGallery({ product, attributeDefs = [] }: Props) {
   const defaultVariant =
     product.variants.find((v) => v.isDefault) ?? product.variants[0] ?? null;
 
@@ -89,9 +212,10 @@ export function ProductGallery({ product }: Props) {
 
   const isHot = product.badge ? HOT_BADGES.has(product.badge) : false;
 
-  const whatsappMsg = selectedVariant
-    ? `Hi Alvari, I'm interested in the "${product.name}" (${selectedVariant.name} — SKU ${selectedVariant.sku})`
-    : `Hi Alvari, I'm interested in the "${product.name}"`;
+  // Attribute pickers need defs whose keys actually occur on the variants.
+  const usableDefs = attributeDefs.filter((def) =>
+    product.variants.some((v) => v.attributes[def.key] !== undefined),
+  );
 
   function selectVariant(id: string) {
     setSelectedVariantId(id);
@@ -212,6 +336,12 @@ export function ProductGallery({ product }: Props) {
           )}
         </div>
 
+        {product.priceIsIndicative && (
+          <p className="mt-2 text-[13px] text-[var(--color-muted)]">
+            Indicative price — final price &amp; delivery confirmed by our team.
+          </p>
+        )}
+
         <p
           className={cn(
             "mt-2 text-[12px] uppercase tracking-[0.14em]",
@@ -231,37 +361,46 @@ export function ProductGallery({ product }: Props) {
           {product.description}
         </p>
 
-        {product.variants.length > 1 && (
-          <div className="mt-10">
-            <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--color-muted)]">
-              Choose variant
-            </p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {product.variants.map((variant) => {
-                const selected = variant.id === selectedVariant?.id;
-                return (
-                  <button
-                    key={variant.id}
-                    type="button"
-                    onClick={() => selectVariant(variant.id)}
-                    className={cn(
-                      "flex flex-col items-start rounded-xl border px-4 py-3 text-left transition",
-                      selected
-                        ? "border-[var(--color-accent)] bg-[var(--color-accent)]/5"
-                        : "border-[var(--color-line)] hover:border-[var(--color-ink)]",
-                    )}
-                  >
-                    <span className="text-sm font-medium text-[var(--color-ink)]">
-                      {variant.name}
-                    </span>
-                    <span className="mt-1 text-xs text-[var(--color-muted)]">
-                      {formatINR(variant.priceNow)} · SKU {variant.sku}
-                    </span>
-                  </button>
-                );
-              })}
+        {usableDefs.length > 0 && product.variants.length > 1 ? (
+          <AttributePickers
+            defs={usableDefs}
+            variants={product.variants}
+            selectedVariant={selectedVariant}
+            onSelect={selectVariant}
+          />
+        ) : (
+          product.variants.length > 1 && (
+            <div className="mt-10">
+              <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                Choose variant
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {product.variants.map((variant) => {
+                  const selected = variant.id === selectedVariant?.id;
+                  return (
+                    <button
+                      key={variant.id}
+                      type="button"
+                      onClick={() => selectVariant(variant.id)}
+                      className={cn(
+                        "flex flex-col items-start rounded-xl border px-4 py-3 text-left transition",
+                        selected
+                          ? "border-[var(--color-accent)] bg-[var(--color-accent)]/5"
+                          : "border-[var(--color-line)] hover:border-[var(--color-ink)]",
+                      )}
+                    >
+                      <span className="text-sm font-medium text-[var(--color-ink)]">
+                        {variant.name}
+                      </span>
+                      <span className="mt-1 text-xs text-[var(--color-muted)]">
+                        {formatINR(variant.priceNow)} · SKU {variant.sku}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )
         )}
 
         {selectedVariant &&
@@ -286,16 +425,8 @@ export function ProductGallery({ product }: Props) {
             variant={selectedVariant}
             imageUrl={product.imageUrl}
             shape="full"
-            label="Add to quotation"
+            label="Add to cart"
           />
-          <a
-            href={`https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(whatsappMsg)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 rounded-full border border-[var(--color-line)] px-7 py-3.5 text-[13px] font-medium uppercase tracking-[0.12em] text-[var(--color-ink)] transition-all duration-300 hover:border-[var(--color-accent)]"
-          >
-            Ask on WhatsApp
-          </a>
           <button
             type="button"
             onClick={handleShare}

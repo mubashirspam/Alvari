@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
+import { BreadcrumbLabel } from "@/features/admin/components/admin-breadcrumbs";
 import { findById, findItemsByOrderId } from "@/features/orders/repositories/order-repository";
-import { mapOrder, ORDER_STATUS_LABEL } from "@/features/orders/types";
+import { mapOrder, ORDER_STATUS_LABEL, ORDER_TYPE_LABEL } from "@/features/orders/types";
 import { formatINR } from "@/lib/utils";
 import { AdminOrderStatusSelect } from "@/features/orders/components/admin-order-status-select";
 import { AdminQuotePanel } from "@/features/orders/components/admin-quote-panel";
@@ -30,18 +30,25 @@ export default async function AdminOrderDetailPage({
 
   return (
     <div className="space-y-8">
+      <BreadcrumbLabel segment={id} label={`#${order.shortCode}`} />
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Link
-            href="/admin/orders"
-            className="mb-3 inline-flex items-center gap-1.5 text-sm text-[var(--color-muted)] hover:text-[var(--color-ink)] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            All orders
-          </Link>
-          <h1 className="font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
-            Order #{order.shortCode}
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-serif text-[32px] tracking-[-0.02em] text-[var(--color-ink)]">
+              Order #{order.shortCode}
+            </h1>
+            <span
+              className={`rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-[0.1em] ${
+                order.type === "instant"
+                  ? "bg-sky-100 text-sky-800"
+                  : order.type === "quote"
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-[var(--color-bg-soft)] text-[var(--color-muted)]"
+              }`}
+            >
+              {ORDER_TYPE_LABEL[order.type]}
+            </span>
+          </div>
           <p className="mt-1 text-sm text-[var(--color-muted)]">
             {new Date(order.createdAt).toLocaleString("en-IN", {
               dateStyle: "full",

@@ -83,12 +83,31 @@ export async function POST(req: NextRequest) {
     imageUrl: string | null;
   }> = [];
 
-  // Carts containing quote-mode products become quote enquiries: the listed
-  // price is indicative and the admin sets the final amount before payment.
+  // Mirror of partitionCheckout: the WhatsApp/quote path takes quote items
+  // only. Instant ("Available") products are pay-online only — reject them
+  // here so a crafted request can't route them around online payment.
   const modeRows = await db
-    .select({ id: products.id, purchaseMode: products.purchaseMode })
+    .select({
+      id: products.id,
+      name: products.name,
+      purchaseMode: products.purchaseMode,
+    })
     .from(products)
     .where(inArray(products.id, [...new Set(data.items.map((i) => i.productId))]));
+  const modeById = new Map(modeRows.map((p) => [p.id, p]));
+  const instantItems = data.items.filter(
+    (i) => modeById.get(i.productId)?.purchaseMode === "instant",
+  );
+  if (instantItems.length > 0) {
+    return NextResponse.json(
+      {
+        error:
+          "These items are pay-online only — use the online payment option at checkout.",
+        blockedItems: [...new Set(instantItems.map((i) => i.productName))],
+      },
+      { status: 422 },
+    );
+  }
   const hasQuoteItems = modeRows.some((p) => p.purchaseMode === "quote");
 
   for (const item of data.items) {
