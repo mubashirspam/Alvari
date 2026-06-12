@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LogOut, Package, ChevronRight, Loader2, RefreshCw } from "lucide-react";
-import { userAuthClient } from "@/lib/auth/user-auth-client";
+import { authClient } from "@/lib/auth/client";
 import { formatINR } from "@/lib/utils";
 import { ORDER_STATUS_LABEL } from "@/features/orders/types";
 
@@ -32,33 +32,37 @@ type Order = {
 };
 
 export default function AccountOrdersPage() {
-  const { data: session, isPending: sessionLoading } = userAuthClient.useSession();
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
 
   const user = session?.user;
+  // A guest who checked out holds an anonymous session. Treat them as signed-out
+  // here so they're still offered Google sign-in, which links their anonymous
+  // orders onto the real account (see onLinkAccount in lib/auth).
+  const isSignedIn = Boolean(user) && !user?.isAnonymous;
 
   useEffect(() => {
-    if (!user) return;
+    if (!isSignedIn) return;
     setOrdersLoading(true);
     fetch("/api/user/orders")
       .then((r) => r.json())
       .then((d) => setOrders(d.orders ?? []))
       .catch(() => setOrders([]))
       .finally(() => setOrdersLoading(false));
-  }, [user]);
+  }, [isSignedIn]);
 
   async function handleGoogleSignIn() {
     setSigningIn(true);
-    await userAuthClient.signIn.social({
+    await authClient.signIn.social({
       provider: "google",
       callbackURL: "/account/orders",
     });
   }
 
   async function handleSignOut() {
-    await userAuthClient.signOut({ fetchOptions: { onSuccess: () => window.location.reload() } });
+    await authClient.signOut({ fetchOptions: { onSuccess: () => window.location.reload() } });
   }
 
   if (sessionLoading) {
@@ -69,8 +73,8 @@ export default function AccountOrdersPage() {
     );
   }
 
-  // Not signed in — show sign-in screen
-  if (!user) {
+  // Not signed in (or only an anonymous guest session) — show sign-in screen.
+  if (!isSignedIn) {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] py-12">
         <div className="mx-auto max-w-md px-4 text-center">
@@ -116,7 +120,9 @@ export default function AccountOrdersPage() {
     );
   }
 
-  // Signed in
+  // Signed in (isSignedIn guarantees a real, non-anonymous user here).
+  if (!user) return null;
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)] py-10">
       <div className="mx-auto max-w-2xl px-4">

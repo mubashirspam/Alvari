@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { products, productVariants } from "@/lib/db/schema";
 import { insertOrderWithItems } from "@/features/orders/repositories/order-repository";
 import { generateShortCode } from "@/features/orders/types";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 import * as paymentRepo from "@/features/payments/repositories/payment-repository";
 import { computeTotals, type PricedLine } from "@/lib/commerce/pricing";
 import {
@@ -154,9 +155,13 @@ export async function POST(req: NextRequest) {
     .filter(Boolean)
     .join(", ");
 
+  // Link to the signed-in account (real or anonymous) for /account/orders.
+  const currentUser = await getCurrentUser();
+
   const { order } = await insertOrderWithItems(
     {
       shortCode,
+      userId: currentUser?.id ?? null,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       customerEmail: data.customerEmail || null,

@@ -1,18 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { neonAuth } from "@/lib/auth/neon-auth";
 import { envMode } from "@/lib/env";
 import { SESSION_COOKIE } from "@/lib/auth/constants";
-
-const authProxy = neonAuth.middleware({ loginUrl: "/admin/login" });
 
 const BASIC_AUTH_REALM = "Alvari staging";
 const BYPASS_PATHS = ["/api/cron", "/api/auth", "/admin/login", "/admin/setup"];
 
 /**
- * True when the request carries either auth credential we accept: a Neon Auth
- * session token cookie or the legacy DB-backed admin session cookie. The proxy
- * is only the first gate — the page layout and every server action / API route
- * call `requireAdmin()`, which fully validates whichever session is present.
+ * True when the request carries an auth credential we accept: a Better Auth
+ * session token cookie (`better-auth.session_token`) or the legacy DB-backed
+ * admin session cookie. The proxy is only the first gate — the page layout and
+ * every server action / API route call `requireAdmin()`, which fully validates
+ * the session AND the role (customers are rejected there).
  */
 function hasAdminSessionCookie(request: NextRequest): boolean {
   if (request.cookies.has(SESSION_COOKIE)) return true;
@@ -78,23 +76,17 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 2. Admin routes still flow through Neon Auth.
-  if (isAdminRoute && !isPublicAdminRoute) {
-    const authResponse = await authProxy(request);
-    if (authResponse) {
-      const isRedirect = authResponse.status >= 300 && authResponse.status < 400;
-      // Neon Auth wants to bounce to /admin/login. If the request already carries
-      // a session cookie (Neon or legacy), don't hard-redirect — that breaks Next
-      // server actions with "An unexpected response was received from the server".
-      // Let it through and let requireAdmin()/the layout do the real validation.
-      if (isRedirect && hasAdminSessionCookie(request)) {
-        const passthrough = NextResponse.next();
-        if (mode !== "production") applyNonProdHeaders(passthrough, mode);
-        return passthrough;
-      }
-      if (mode !== "production") applyNonProdHeaders(authResponse, mode);
-      return authResponse;
-    }
+  // 2. Admin routes: first gate is cookie presence. Full session + role
+  //    validation happens in the admin layout and requireAdmin(). Bounce to
+  //    login only when no session cookie is present at all (avoids breaking
+  //    Next server actions for signed-in users).
+  if (isAdminRoute && !isPublicAdminRoute && !hasAdminSessionCookie(request)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/login";
+    url.search = "";
+    const redirectResp = NextResponse.redirect(url);
+    if (mode !== "production") applyNonProdHeaders(redirectResp, mode);
+    return redirectResp;
   }
 
   // 3. Non-prod: tag every response with noindex so we never get crawled.

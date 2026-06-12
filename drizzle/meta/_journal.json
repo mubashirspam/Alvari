@@ -57,6 +57,13 @@
       "when": 1781202094137,
       "tag": "0007_red_black_cat",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781262850043,
+      "tag": "0008_numerous_newton_destine",
+      "breakpoints": true
     }
   ]
 }

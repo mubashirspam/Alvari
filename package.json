@@ -29,11 +29,11 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.97.1",
     "@imagekit/next": "^2.1.5",
-    "@neondatabase/auth": "^0.2.0-beta.1",
     "@neondatabase/serverless": "^1.1.0",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@upstash/redis": "^1.37.0",
+    "better-auth": "^1.6.17",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",

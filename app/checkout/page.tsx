@@ -18,6 +18,7 @@ import {
 import { useCart, cartSubtotal } from "@/features/cart/store";
 import type { CartItem } from "@/features/cart/types";
 import { openRazorpayCheckout } from "@/features/payments/razorpay-checkout";
+import { authClient } from "@/lib/auth/client";
 import { partitionCheckout } from "@/lib/commerce/checkout-options";
 import { formatINR } from "@/lib/utils";
 import {
@@ -431,11 +432,27 @@ export default function CheckoutPage() {
     }
   }
 
+  // Make sure a Better Auth session exists (anonymous for guests) before placing
+  // the order, so it's stamped with a userId and can migrate to the customer's
+  // real account when they later sign in with Google. Best-effort: a failure
+  // here just means this order links by email only.
+  async function ensureCustomerSession() {
+    try {
+      const { data } = await authClient.getSession();
+      if (!data?.session) {
+        await authClient.signIn.anonymous();
+      }
+    } catch {
+      // ignore — order still records the customer's details
+    }
+  }
+
   async function handlePayOnline() {
     if (onlineItems.length === 0 || submitting) return;
     setErrors({});
     if (!validate()) return;
     setSubmitting("online");
+    await ensureCustomerSession();
     await payOnline();
   }
 
@@ -444,6 +461,7 @@ export default function CheckoutPage() {
     setErrors({});
     if (!validate()) return;
     setSubmitting("quote");
+    await ensureCustomerSession();
     await requestQuote();
   }
 

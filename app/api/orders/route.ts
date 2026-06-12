@@ -6,6 +6,7 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { insertOrderWithItems } from "@/features/orders/repositories/order-repository";
 import { mapOrder, generateShortCode } from "@/features/orders/types";
 import { sendOrderConfirmationEmail } from "@/lib/email/send-order-email";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 import { env } from "@/lib/env";
 
 const itemSchema = z.object({
@@ -158,9 +159,14 @@ export async function POST(req: NextRequest) {
   const subtotalInPaise = verifiedItems.reduce((s, it) => s + it.lineTotalInPaise, 0);
   const shortCode = generateShortCode();
 
+  // Link the order to the signed-in account (real or anonymous) so it surfaces
+  // on /account/orders and migrates with the account when a guest later signs in.
+  const currentUser = await getCurrentUser();
+
   const { order: orderRow, items: itemRows } = await insertOrderWithItems(
     {
       shortCode,
+      userId: currentUser?.id ?? null,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       customerEmail: data.customerEmail || null,

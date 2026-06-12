@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { and, eq, gt } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
@@ -9,9 +9,17 @@ import {
   type AdminSessionRow,
 } from "@/lib/db/schema";
 import { SESSION_COOKIE, SESSION_TTL_DAYS } from "@/lib/auth/constants";
-import { neonAuth } from "@/lib/auth/neon-auth";
+import { auth, ADMIN_ROLES } from "@/lib/auth";
 
 export { SESSION_COOKIE } from "@/lib/auth/constants";
+
+/** Lean view of the signed-in staff member used across the admin surface. */
+export type CurrentAdmin = {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+};
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -87,53 +95,46 @@ export async function clearSessionCookie(): Promise<void> {
   });
 }
 
-async function getCurrentAdminFromLegacyCookie(): Promise<AdminRow | null> {
+async function getCurrentAdminFromLegacyCookie(): Promise<CurrentAdmin | null> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const result = await findAdminBySessionToken(token);
-  return result?.admin ?? null;
+  if (!result) return null;
+  const { admin } = result;
+  return { id: admin.id, email: admin.email, name: admin.name ?? null, role: admin.role };
 }
 
-async function getCurrentAdminFromNeonAuth(): Promise<AdminRow | null> {
+async function getCurrentAdminFromBetterAuth(): Promise<CurrentAdmin | null> {
   try {
-    const { data: session } = await neonAuth.getSession();
-    const user = session?.user as
-      | { email?: string | null; name?: string | null; role?: string | null }
-      | undefined;
-    if (!user?.email) return null;
-    if (user.role !== "admin") return null;
-
-    const rows = await db
-      .select()
-      .from(admins)
-      .where(eq(admins.email, user.email))
-      .limit(1);
-    if (rows[0]) return rows[0];
-
-    // Neon Auth admin without a row in admins table — synthesize a minimal one
-    // so downstream code that types against AdminRow keeps working.
+    const session = await auth.api.getSession({ headers: await headers() });
+    const user = session?.user;
+    if (!user?.email || typeof user.role !== "string") return null;
+    if (!(ADMIN_ROLES as readonly string[]).includes(user.role)) return null;
     return {
-      id: "neon-auth-virtual",
+      id: user.id,
       email: user.email,
-      passwordHash: "",
       name: user.name ?? null,
-      role: "admin",
-      createdAt: new Date(),
-      lastLoginAt: null,
-    } satisfies AdminRow;
+      role: user.role,
+    };
   } catch {
     return null;
   }
 }
 
-export async function getCurrentAdmin(): Promise<AdminRow | null> {
-  const fromNeon = await getCurrentAdminFromNeonAuth();
-  if (fromNeon) return fromNeon;
+/**
+ * Resolve the signed-in staff member. Prefers a Better Auth session whose role
+ * is one of ADMIN_ROLES; falls back to the legacy DB-cookie session so existing
+ * admin logins keep working through the transition. Customers (role
+ * "customer") are intentionally rejected here.
+ */
+export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
+  const fromBetterAuth = await getCurrentAdminFromBetterAuth();
+  if (fromBetterAuth) return fromBetterAuth;
   return getCurrentAdminFromLegacyCookie();
 }
 
-export async function requireAdmin(): Promise<AdminRow> {
+export async function requireAdmin(): Promise<CurrentAdmin> {
   const admin = await getCurrentAdmin();
   if (!admin) {
     throw new Error("UNAUTHORIZED");

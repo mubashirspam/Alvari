@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
-import { findByPhone } from "@/features/orders/repositories/order-repository";
 import { mapOrder } from "@/features/orders/types";
 import { db } from "@/lib/db";
 import { orderItems, orders } from "@/lib/db/schema";
-import { eq, inArray, desc } from "drizzle-orm";
+import { eq, inArray, desc, or } from "drizzle-orm";
 
 export async function GET(_req: NextRequest) {
   const user = await getCurrentUser();
@@ -12,11 +11,18 @@ export async function GET(_req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Find orders where customerEmail matches the signed-in user's email
+  // Match orders linked to this account (userId) plus any historical orders that
+  // carry the same customer email. Anonymous accounts have a generated email, so
+  // they match by userId only.
+  const conditions = [eq(orders.userId, user.id)];
+  if (user.email && !user.isAnonymous) {
+    conditions.push(eq(orders.customerEmail, user.email));
+  }
+
   const orderRows = await db
     .select()
     .from(orders)
-    .where(eq(orders.customerEmail, user.email))
+    .where(conditions.length === 1 ? conditions[0] : or(...conditions))
     .orderBy(desc(orders.createdAt))
     .limit(50);
 
